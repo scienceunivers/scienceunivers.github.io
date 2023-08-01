@@ -3,9 +3,9 @@ main:
   # - title: "Quick-Start Guide"
     # url: https://mmistakes.github.io/minimal-mistakes/docs/quick-start-guide/
   - title: "Publications"
-    url: ./_pages/publications.md
+    url: /Publications/
   - title: "About"
-    url: ./_pages/About.md
+    url: /About/
   # - title: "Sample Posts"
   #   url: /year-archive/
   # - title: "Sample Collections"
