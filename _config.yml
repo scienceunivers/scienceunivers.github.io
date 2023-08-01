@@ -26,7 +26,7 @@ baseurl                  : # the subpath of your site, e.g. "/blog"
 repository               : # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
 teaser                   : "/assets/images/202110081422卑职明白.png" # path of fallback teaser image, e.g. "/assets/images/500x300.png"
 logo                     : "/assets/images/202110272142马保国这好吗这不好.gif" # path of logo image to display in the masthead, e.g. "/assets/images/88x88.png"
-masthead_title           : "一任翻云覆雨慵开眼，随教呼牛唤马只点头。" # overrides the website title displayed in the masthead, use " " for no title
+masthead_title           : "一任翻云覆雨慵开眼，随教呼牛唤马只点头" # overrides the website title displayed in the masthead, use " " for no title
 # breadcrumbs            : false # true, false (default)
                           # The breadcrumb menu, also known as a breadcrumb trail, contains a series of clickable links that represent 
                           # the logical hierarchy of a user's journey within a website. Why add breadcrumbs to a website? 
