@@ -132,7 +132,7 @@ author:
       icon: "fab fa-fw fa-instagram"
       # url: "https://instagram.com/"
     - label: "stackoverflow"
-      icon: "fab fa-fw fa-stackoverflow"
+      icon: "fa-brands fa-stack-overflow"
       url: "https://stackoverflow.com/users/15173319/steven"
     - label: "StackExchange"
       icon: "fa-brands fa-stack-exchange"
