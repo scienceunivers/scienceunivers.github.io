@@ -8,6 +8,8 @@ main:
     url: /about/
   - title: "Projects"
     url: /projects/
+  - title: "Library"
+    url: /library/
   # - title: "Sample Posts"
   #   url: /year-archive/
   # - title: "Sample Collections"
