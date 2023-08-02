@@ -1,6 +1,6 @@
 ---
 permalink: /publications/
 ---
-- 李知常. 基于Black-Litterman模型的资产配置策略研究[D]. 山东大学,2017.
-- 中国互联网金融协会. 中国互联网金融年报（2017）[M]. 北京：中国金融出版社，2017.10
-- 中国人民银行金融稳定分析小组. 中国金融稳定报告[M]. 北京：中国金融出版社，2018.10
+- Zhichang Li.Asset Allocation Strategies based on Black-Litterman model.2017.Shandong University,MA thesis
+- National Internet Finance Association of China.China Internet Finance Report(2017).China Financial Publishing House,2017.10
+- Financial Stability Analysis Group of the People's Bank of China.China Financial Stability Report.China Financial Publishing House,2018.10
