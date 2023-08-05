@@ -11,4 +11,4 @@ In general, colleges can determine what constitutes a B.A. or a B.S. Some libera
 
 2014, B.A. in economics, Zhongnan University of Economics and Law.
 
-2017, M.A. in econamics, Shandong University.
+2017, M.A. in economics, Shandong University.
