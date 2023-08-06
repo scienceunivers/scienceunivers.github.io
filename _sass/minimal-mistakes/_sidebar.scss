@@ -109,11 +109,11 @@
   @include breakpoint($large) {
     position: relative;
     float: right;
-    margin-right: 1em;
+    margin-right: 0;
   }
 
   @include breakpoint($x-large) {
-    margin-right: 0;
+    margin-right: 1em;
   }
 }
 
