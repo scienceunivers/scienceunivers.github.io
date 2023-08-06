@@ -101,14 +101,14 @@
 
   @include breakpoint($x-large) {
     width: $right-sidebar-width;
-    margin-right: -1em; //-1 * $right-sidebar-width;
+    margin-right: -1 * $right-sidebar-width;
   }
 }
 
 .splash .sidebar__right {
   @include breakpoint($large) {
     position: relative;
-    float: right;
+    float: left;
     margin-right: 0;
   }
 
