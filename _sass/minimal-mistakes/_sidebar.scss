@@ -340,7 +340,7 @@
     right: initial;
     width: initial;
     margin-right: initial;
-    padding-left: 1em;
+    padding-left: initial;
     z-index: initial;
 
     &.sticky {
@@ -349,7 +349,7 @@
   }
 
   @include breakpoint($x-large) {
-    width: initial;
+    width: 1em;
     margin-right: initial;
   }
 }
