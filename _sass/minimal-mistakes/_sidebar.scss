@@ -349,8 +349,8 @@
   }
 
   @include breakpoint($x-large) {
-    width: 1em;
-    margin-right: initial;
+    width: initial;
+    margin-right: 1em;
   }
 }
 
