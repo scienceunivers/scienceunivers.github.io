@@ -79,8 +79,8 @@
     top: 0;
     right: 0;
     width: $right-sidebar-width-narrow;
-    margin-right: 1em; // * $right-sidebar-width-narrow;
-    padding-left: 1em;
+    margin-right: -1 * $right-sidebar-width-narrow;
+    padding-left: 0;
     z-index: 10;
 
     &.sticky {
