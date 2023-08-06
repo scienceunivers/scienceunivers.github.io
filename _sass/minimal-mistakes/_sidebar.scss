@@ -113,7 +113,7 @@
   }
 
   @include breakpoint($x-large) {
-    margin-right: 1em;
+    margin-right: 0;
   }
 }
 
