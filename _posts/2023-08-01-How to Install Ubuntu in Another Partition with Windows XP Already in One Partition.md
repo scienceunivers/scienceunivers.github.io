@@ -4,14 +4,14 @@ layout: splash
 author_profile: true
 title: How to Install Ubuntu in Another Partition with Windows XP Already in One Partition
 ---
+# How to Install Ubuntu in Another Partition with Windows XP Already in One Partition
+
 ## Table of Content
 <!--https://stackoverflow.com/questions/11948245/markdown-to-create-pages-and-table-of-contents
 -->
 1. [Environment](#environment)
 2. [Prepare](#prepare)
 3. [Installation](#installation)
-
-# How to Install Ubuntu in Another Partition with Windows XP Already in One Partition
 
 In 2018, I needed installing a Ubuntu to implement a risk model. I'd like to mark it down for reference. 
 
@@ -50,9 +50,7 @@ https://stackoverflow.com/questions/15764242/is-it-possible-to-make-relative-lin
    - 1. Create a root partition first. Choose the free space available and click on +. Here, choose the size of root directory, choose ext4file system, and mount point as /.
    > [!NOTE]
    > As for the type of the partition, I have to admit that some rarely seen situations had come to me. When I first installed ubuntu on B460 at 201807, I can recall I had chosen primary for all of the three partitions, and it's ok, the number of these partitions are naturally sda8,sda9,sda10, following the windows partition whose name is sda7 (sda1 holds xp, sda5 holds programs, sda6 holds movies), holding my MATLAB installation.
-
    > But when I reinstall ubuntu due to some fucking strange reasons at 201906, the linux partitions are no more 8,9,10, they are sda3(root) , sda4 (swap), and when I wanted to allocate some space for home, it says the leftover space is unusable, no matter which partition type I choose.
-
    > I have no idea why. I know it has something to do with partition mechanism the hard disk uses, namely the number of primary partitions are at most four (for details , see 鸟哥linux私房菜), which explains why the leftover is unusable after the sda4 has been alloacated. But why did I make it at 201807? Of course there is a possibility that my memory went wrong, that is the installation wizard choose logical partition by default.
 
 ![install ubuntu 3](/assets/images/install ubuntu 3.png){:style="display:block; margin-left:auto; margin-right:auto"}
