@@ -13,8 +13,14 @@ In daily work with tables, expecially in excel, we usually apply the vlookup fun
 Suppose I have the following worksheets, I want to get part of the corresponding values from these three worksheets, normally, there are two ways regarding formulas. 
 <!---https://stackoverflow.com/questions/24319505/how-can-one-display-images-side-by-side-in-a-github-readme-md
 -->
-![doc-vlookup-from-multiple-sheets-1](/assets/images/doc-vlookup-from-multiple-sheets-1.png){:style="display:block; margin-left:auto; margin-right:auto"}
-![doc-vlookup-from-multiple-sheets-2](/assets/images/doc-vlookup-from-multiple-sheets-1.png){:style="display:block; margin-left:auto; margin-right:auto"}
+<p float="left">
+  <img src="/assets/images/doc-vlookup-from-multiple-sheets-1.png" width="100" />
+  <img src="/assets/images/doc-vlookup-from-multiple-sheets-2.png" width="100" /> 
+  <img src="/img3.png" width="100" />
+</p>
+
+![doc-vlookup-from-multiple-sheets-1](/assets/images/doc-vlookup-from-multiple-sheets-1.png){:style="display:inline; margin-left:auto; margin-right:auto"}
+![doc-vlookup-from-multiple-sheets-2](/assets/images/doc-vlookup-from-multiple-sheets-1.png){:style="display:inline; margin-left:auto; margin-right:auto"}
 ![doc-vlookup-from-multiple-sheets-3](/assets/images/doc-vlookup-from-multiple-sheets-1.png){:style="display:block; margin-left:auto; margin-right:auto"}
 &rarr;
 ![doc-vlookup-from-multiple-sheets-4](/assets/images/doc-vlookup-from-multiple-sheets-1.png){:style="display:block; margin-left:auto; margin-right:auto"}
