@@ -4,13 +4,16 @@ layout: splash
 author_profile: true
 title: How to Install Ubuntu in Another Partition with Windows XP Already in One Partition
 ---
+# Table of Content
+1. [Environment](#environment)
 # How to Install Ubuntu in Another Partition with Windows XP Already in One Partition
 
 In 2018, I needed installing a Ubuntu to implement a risk model. I'd like to mark it down for reference. 
 
 Most blogs are about installing Ubuntu on a fresh computer (tutorial.ubuntu.com), restoring OS (wiki how), installing Ubuntu along with windows OS (to cram them into one partition or use windows 10's self contained mechanism, see lifiwire.com for an example), installing Ubuntu in a VM (linus.nci.nih.gov), etc. Few mentioned how to put Ubuntu and windows xp into two seperate partitions, which is today's theme.
 
-## Environment: 
+## Environment 
+<!---<a name="Environment"></a>-->
 lenovo B460, window xp service package 3, intel core i3 380m, Ubuntu 18.04 lts(amd 64).
 ## Prepare:
 1. figure out if your cpu is 32 bit or 64 bit, which decides which kind of release of Ubuntu you will use. To do this, refer to some how-to articles or those listing the whole series of intel cpus like wiki, i.e. the list of Intel Core i3 microprocessors. Of course the most authoritative way is to look it up in intel's product website, there is plenty information about intel core i3 380m( or yours), like whether it is intel 64 or has Physical Address Extensions. If it is intel 64, then march forward.
