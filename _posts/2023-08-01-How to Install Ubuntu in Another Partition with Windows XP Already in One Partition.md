@@ -33,7 +33,6 @@ lenovo B460, window xp service package 3, intel core i3 380m, Ubuntu 18.04 lts(
 ## Installation
 1. Plug the USB into the computer and restart it. While booting the computer press your function key (defers from computer to computer) to go to the boot menu. Then, choose the option to boot from USB, this is not time consuming if you are familiar with boot menu.
 2. Once you set your computer to boot from usb and restart again, you will be presented with option to try or install Ubuntu. Click on install. You will be presented with a few screen options to choose the language and keyboard layout. It will then do some checks on available space, power and internet connection etc. Better choose to connect the Internet with Ubuntu 18.04 lts.
-
 ![prepare to install ubuntu](/assets/images/prepare to install ubuntu.jpg){:style="display:block; margin-left:auto; margin-right:auto"}
 <!---
 https://stackoverflow.com/questions/15764242/is-it-possible-to-make-relative-link-to-image-in-a-markdown-file-in-a-gist, Relative paths to images do work, but when you're writing a markdown file directly from the github web app, the images don't show up in preview. Once you commit the file the images are visible as expected
@@ -48,15 +47,11 @@ https://stackoverflow.com/questions/15764242/is-it-possible-to-make-relative-lin
 ![install ubuntu 2](/assets/images/install ubuntu 2.jpg){:style="display:block; margin-left:auto; margin-right:auto"}
 
    - 1. Create a root partition first. Choose the free space available and click on +. Here, choose the size of root directory, choose ext4file system, and mount point as /.
-   > [!NOTE]
-   > As for the type of the partition, I have to admit that some rarely seen situations had come to me. When I first installed ubuntu on B460 at 201807, I can recall I had chosen primary for all of the three partitions, and it's ok, the number of these partitions are naturally sda8,sda9,sda10, following the windows partition whose name is sda7 (sda1 holds xp, sda5 holds programs, sda6 holds movies), holding my MATLAB installation.
-   > But when I reinstall ubuntu due to some fucking strange reasons at 201906, the linux partitions are no more 8,9,10, they are sda3(root) , sda4 (swap), and when I wanted to allocate some space for home, it says the leftover space is unusable, no matter which partition type I choose.
-   > I have no idea why. I know it has something to do with partition mechanism the hard disk uses, namely the number of primary partitions are at most four (for details , see 鸟哥linux私房菜), which explains why the leftover is unusable after the sda4 has been alloacated. But why did I make it at 201807? Of course there is a possibility that my memory went wrong, that is the installation wizard choose logical partition by default.
+   - 2.  Next we will create swap. Click on the, use the file type as Swap area, suggestible size is RAM*2. To create Home, try to allocate the maximum space (in fact allocate it rest of the free space) to Home because this is where you'll be downloading and keeping files, I don't add the corresponding pictures here because it's basically similar as creating Root.
+   - 3.  Once you are ready with Root, Swap and Home, click on Install Now, on which I spent about half an hour. Rest is some trivial steps. You will be taken through screens to select time zone, login details, etc.
+    <!---实在搞不定[!NOTE]和ordered list的结合。-->
 
 ![install ubuntu 3](/assets/images/install ubuntu 3.png){:style="display:block; margin-left:auto; margin-right:auto"}
-
-   - 2. Next we will create swap. Click on the, use the file type as Swap area, suggestible size is RAM*2. To create Home, try to allocate the maximum space (in fact allocate it rest of the free space) to Home because this is where you'll be downloading and keeping files, I don't add the corresponding pictures here because it's basically similar as creating Root.
-   - 3. Once you are ready with Root, Swap and Home, click on Install Now, on which I spent about half an hour. Rest is some trivial steps. You will be taken through screens to select time zone, login details, etc. 
 
 If you run across any problems that haven't been covered during the above process, just google or bing it, never expect to solve a theoretical or practical puzzles racking your brain with Baidu.
 
