@@ -1,8 +1,9 @@
 ---
 layout: archive
 ---
-
-{% include disqus.html %}
+{% if page.comments %}
+  {% include disqus.html %}
+{% endif %}
 
 {{ content }}
 
