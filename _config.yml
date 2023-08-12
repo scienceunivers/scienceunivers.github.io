@@ -112,11 +112,11 @@ author:
   # ![image-center](/assets/images/202110272142马保国这好吗这不好.gif){: .align-center}
   bio              : "Staff at an association under PBC. A curious digger."
   location         : "Beijing"
-  email            :
+  email            : "scienceuniversity@163.com"
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
-      # url: "mailto:your.name@email.com"
+      url: "mailto:scienceuniversity@163.com"
     - label: "Website"
       icon: "fas fa-fw fa-link"
       # url: "https://your-website.com"
