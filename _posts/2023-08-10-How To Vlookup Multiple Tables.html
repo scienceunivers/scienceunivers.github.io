@@ -7,6 +7,10 @@ title: How to Vlookup Multiple Tables
 
 <!--author_profile: true
 -->
+<!--
+github md竟然不支持公式，还是preview的时候支持，commit后就不支持了……所以还是写html吧。。
+-->
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 In daily work with tables, expecially in excel, we usually apply the vlookup function to match values where the lookup area is just one array or one sheet. But, have you considered that how to vlookup value across multiple sheets?  I know that most people will suppose these areas have the same fields, so they can utilize Kutools for excel which can simplify the task of combining multiple sheets significantly. But here, I will introduce you some purely $excelish$ way to solve these problems.
 
@@ -19,13 +23,22 @@ https://stackoverflow.com/questions/24319505/how-can-one-display-images-side-by-
   <img src="/assets/images/doc-vlookup-from-multiple-sheets-2.png" width=20% /> 
   <img src="/assets/images/doc-vlookup-from-multiple-sheets-3.png" width=20% />
   <!---&rarr;{:style="padding: 10px 0;"}
+  箭头不是图片没法vertically align。
   -->
+<!---
+这种网页写法，preview中可以加载，但commit后在github page上就加载不出来。
 </p>
+-->
+<!--
+![doc-vlookup-from-multiple-sheets-2](/assets/images/doc-vlookup-from-multiple-sheets-1.png){:style="display:inline; width:20%"}
+  -->
 I want to get part of the corresponding values from these three worksheets, normally, there are two ways regarding formulas. 
-
+<p align="center">
+<img src="/assets/images/doc-vlookup-from-multiple-sheets-4.png" />
+</p>
 <!---
 https://stackoverflow.com/questions/24319505/how-can-one-display-images-side-by-side-in-a-github-readme-md
--->
+
 ![doc-vlookup-from-multiple-sheets-4](/assets/images/doc-vlookup-from-multiple-sheets-4.png){:style="display:block; margin-left:auto; margin-right:auto"}
 
 <!---
