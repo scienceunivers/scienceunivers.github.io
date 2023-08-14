@@ -10,13 +10,20 @@ title: How to Vlookup Multiple Tables
 <!--
 github md竟然不支持公式，还是preview的时候支持，commit后就不支持了……所以还是写html吧。。
 -->
-
-<html>
 <head>
 <title>How to Vlookup Multiple Tables</title>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  code {
+  font-family: Consolas,"courier new";
+  color: white;
+  background-color: black;
+  padding: 0;
+  font-size: 90%;
+}
+</style>
 </head>
 <body>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <p>
 In daily work with tables, expecially in excel, we usually apply the vlookup function to match values where the lookup area is just one array or one sheet. But, have you considered that how to vlookup value across multiple sheets?  I know that most people will suppose these areas have the same fields, so they can utilize Kutools for excel which can simplify the task of combining multiple sheets significantly. But here, I will introduce you some purely $excelish$ way to solve these problems.
 <br><br>
@@ -55,7 +62,7 @@ https://stackoverflow.com/questions/24319505/how-can-one-display-images-side-by-
 ![doc-vlookup-from-multiple-sheets-3](/assets/images/doc-vlookup-from-multiple-sheets-3.png){:style="display:inline; margin-left:auto; margin-right:auto"}
 -->
 <h1>Vlookup Values From Multiple Worksheets With Normal Formula</h1>
-  <pre>
+  <br>
   <code>
 =IFERROR(
 		VLOOKUP($A2,Sheet1!$A$2:$B$5,2,FALSE),
@@ -65,7 +72,7 @@ https://stackoverflow.com/questions/24319505/how-can-one-display-images-side-by-
 				)
 		) 
   </code>
-  </pre>
+  <br>
 <p>
 From sheet 1 to sheet 3, these are the lookup areas, we want to lookup Names corresponding to the ID across these three tables. And the formula is fairly straight forward, it uses nested IFERROR function, which means if it can find right values in the first VLOOKUP, then done; if not, then proceed to the nested part, and try the inner VLOOKUP, if the inner VLOOKUP can do the job, then done, or proceed again into the deeper VLOOKUP. It is obvious that if there are N lookup area, then we must form N-1 layer of nested IFERRORs.
 </p>
@@ -84,51 +91,51 @@ The challenge is that the product code information could be on other sheets:
 </p>
 <p>
 The first thing is to enter a list of sheet names and give them a named range, for example, SheetList (consists of sheet2, sheet3, sheet4). Suppose A4 is the cell of the first value that we want to look up.
-  <pre>
+  <br>
   <code>
 =VLOOKUP(A4,INDIRECT("'"&INDEX(SheetList,MATCH(1,--(COUNTIF(INDIRECT("'"&SheetList&"'!$A$1:$c$4"),A4)>0),0))&"'!$A$1:$c$4"),2,FALSE)
   </code>
-  </pre>
+  <br>
 Let's first take a look at the innermost part 
-  <pre>
+  <br>
   <code>
 INDIRECT("'"&SheetList&"'!$A$1:$c$4")
   </code>
-  </pre>
+  <br>
 it returns a reference specified by a text string, and the single quote is a symbol for names in excel and & stands for concatenation, so the COUNTIF will become COUNTIF('SheetList'!\$A\$1:\$c\$4, A4), it is checking each sheet in the SheetList to find a match. If it finds a match it counts 1. So the name SheetList here performs a role that allow COUNTIF to find matches in three different sheets, which is a little amazing. And since the  SheetList has multiple components, COUNTIF will return a set-like or an array-like thing wrapped by curly brackets, which in this case is {1;0;0}.
 <br>
 <span style="color: red">ATTENTION</span> that behind the whole COUNTIF, there is a >0, so {1;0;0} is not the number of matches in each sheet, rather, it is whether there IS any matches in each sheet.
 <br>
 so the formula becomes 
-  <pre>
+  <br>
   <code>
 =VLOOKUP(A4,INDIRECT("'"&INDEX(SheetList,MATCH(1,{1;0;0},0))&"'!$A$1:$c$4"),2,FALSE)
   </code>
-  </pre>
-Wait, what does -- before COUNTIF mean? Many blogs don't give it an explanation, but I can present my deduction based on my experience on excel using. I think because the COUNTIF will return {1;0;0}, but {1;0;0} can't compare with 0 directly, so we need to convert it to some comparable form, which is - -'s(I typed a space in between to look more clearly) glorious mission. If you want to dig into this further, you can search "Why two minus signs "- -" in an excel formula" or something alike.
+  <br>
+What does -- before COUNTIF mean? Many blogs don't give it an explanation, but I can present my deduction based on my experience on excel using. I think because the COUNTIF will return {1;0;0}, but {1;0;0} can't compare with 0 directly, so we need to convert it to some comparable form, which is - -'s(I typed a space in between to look more clearly) glorious mission. If you want to dig into this further, you can search "Why two minus signs "- -" in an excel formula" or something alike.
 <br>
 Then we go to the MATCH. The syntax for the MATCH function is: 
 MATCH(lookup_value, lookup_array, [match_type])
 <br>
 The MATCH is finding the value 1 in {1;0;0} and returns its position. Which in this case is the first position, therefore our MATCH formula evaluates to 1. And the formula becomes:
-  <pre>
+  <br>
   <code>
 =VLOOKUP(A4,INDIRECT("'"&INDEX(SheetList,1)&"'!$A$1:$c$4"),2,FALSE)
   </code>
-  </pre>
+  <br>
 The next is index function, INDEX Function syntax:
 INDEX(reference, row_num, [column_num], [area_num])
 <br>
 If you are farmiliar with Bakus-Naur form, then what the [] means is definitely clear (optional). The INDEX function returns a reference to the 1st value in the SheetList, e.g.Sheet2. And the formula just looks like this:
-  <pre>
+  <br>
   <code>
 =VLOOKUP(A4,INDIRECT("'"&"Sheet2"&"'!$A$1:$c$4"),2,FALSE)
   </code>
-  </pre>
+  <br>
 Once we have arrived this step, isn't this formula a dejavu to you? Recall the meaning of INDIRECT, and you will find that this is right away the ordinary VLOOKUP function! So we are done.
 <br>
 Note: Be sure that you press ctrl+shift+enter when using array formula.
 </p>
-<h2>This is two ways of vlookup multiple sheets, the array formula is harsher than the former, be careful when using it.</h2>
+<h4>This is two ways of vlookup multiple sheets, the array formula is harsher than the former, be careful when using it.</h4>
 </body>
 </html>
