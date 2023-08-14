@@ -1,0 +1,143 @@
+---
+type: posts
+layout: splash
+
+title: Validate Mysql Database Backup
+---
+<!DOCTYPE html>
+<head>
+  <title>Validate Mysql Database Backup</title>
+<style>
+code {
+  font-family: Consolas,"courier new";
+  color: crimson;
+  background-color: #f1f1f1;
+  padding: 2px;
+  font-size: 90%;
+}
+</style>
+</head>
+<body>
+<h1>Background</h1>
+<p>
+It's always troublesome when starting from scratch. When I took this risk alert system 1.0, I can hardly believe how messy it is, including the machine this system is running on, which is lenovo thinkcenter M8500t-N000, a very crude PC as the server. I can vaguely recall that it has a RAM about 4G, with 3 other 4G RAM sticks overall as suppliments. There's also a problem in the connection between the monitor and housing, causing the computer screen color being wierd. 
+<br>
+The most awkward situation is that the hard disk is soon being full, it has 1 TB space, 30-50G left spare. Usually my monthly routine is that I extract one month data package (in the form of sql), output their file names into another sql file, then import all the data into the server.
+</p>
+<h1>Action</h1>
+First, output all the sql file names into one sql file so that you can source them into the server as a whole. Use dir command( ref the DOS doc), choose the appropriate path as you want, 
+  <pre>
+  <code>
+    dir >E:\MarData\export.sql
+  </code>
+  </pre>
+Open export.sql, add key words "source + directory(where you store all the data file that is in the form of sql)" at the beginning of each line, then add command suffix at the end (which is ; in the case of mysql, ultraedit and notepad++ are  recommended),then start up the Microsoft terminal services client,  log onto the server, and execute codes below, to load the item-by-item data into the server: 
+  <pre>
+  <code>
+    mysql -uroot -p*****
+    use <the database name>; 
+    tee E:/MarLog.txt;
+    source E:/MarData/import.sql;
+  </code>
+  </pre>
+
+
+</body>
+
+
+
+
+==**Note that <> stands for a place holder.**==
+You'd better be able to tell the difference between \ and /, or there would be errors like:
+```sql
+unknown command ‘\M’、unknown command ‘\b’
+```
+The process lasts about 5 hours to 2 days, depending on the data size. Errors may step into the process, like:
+```sql
+Error 1062 <23000> duplicate entry ‘20117321’ for key ‘PRIMARY’
+Error 1064 <20000> row column doesn’t match
+```
+I omit them due to lacking time to deal with it.
+When it's done, check to ensure if the latest data in the month has been inserted successfully:
+```sql
+select BID_TIME_DATE 
+from <table name> 
+order by BID_TIME_DATE desc 
+limit 10;
+select SUCCESS_TIME_DATE 
+from <table name>  
+order by SUCCESS_TIME_DATE desc 
+limit 10;
+```
+One way is to see the consecutivity of BID_TIME_DATE and SUCCESS_TIME_DATE.
+When I insert data in April 2017, error occurs:
+```sql
+Error1114 08171016 bid_record_*** is full.
+```
+And only 700 KB space was left. Definitely it's time to migrate data to a ==**real**== server. For space limitation, I skip backup and restore process.
+# Validation After Migration
+A natural way is to check whether the number of records corresponds to the original database (we'll call it DB1).
+```sql
+SELECT SUM(TABLE_ROWS) 
+FROM INFORMATION_SCHEMA.TABLES 
+WHERE TABLE_SCHEMA = 'DB1';
+```
+DB    | Num of records
+---------|-----------
+DB1     |  11.08*10^9
+DB2    |  11.9*10^9
+So this means we have to inspect into every table to see specifically which table has problems when being backed up. And I tried these:
+```sql
+use information_schema; 
+select table_name,table_rows 
+from tables 
+where TABLE_SCHEMA = '<DB name>' 
+order by table_rows desc 
+into outfile '/comparison.xls';
+```
+In comparison.xls, there are foughly 11000 tables, 7000 of which is the same in DB1 and DB2 regarding number of rows. I sampled a table in the rest of the 4000 tables, use 
+```sql
+select count(*) from DB1.table1;
+select count(*) from DB2.table1;
+```
+and wierd things happen, these two tables have the same number of records! Apparently there's some difference in the operating mechanism between `select count(*)` and `select……from information_schema`. The reason is that information_schema.tables.table_rows is merely an approximate value for InnoDB tables. See [MySQL获取数据库每个表的行数](http://blog.csdn.net/call_me_lzm/article/details/52244162) for more information.
+So I'm gonna use `count(*)` to check in a more accurate manner. But for over 10000 tables, looks like I have to write a loop in a sql Stored Routines(eg. functions and procedures) like below:
+```sql
+CREATE FUNCTION functionName(param1 VARCHAR(256))
+RETURNS FLOAT READS SQL DATA
+BEGIN
+	/*A lot of blocks of codes*/
+END;
+```
+but the following is a more friendly path for new comers, 
+```sql
+use information_schema;
+select concat(
+   			 'select "', TABLE_name, '", count(*) from',
+   			 TABLE_SCHEMA, '.', TABLE_name,
+   			 ' union all'
+   			 )
+from tables
+where TABLE_SCHEMA=<DB name> 
+order by table_rows desc 
+into outfile ‘/comparison_1.txt’;
+```
+Thanks to this article [mysql中查看数据库中所有表的记录数](http://www.111cn.net/database/mysql/45964.htm). The `select concat...` will generate a bunch of codes looking like:
+```sql
+select "bid_record_***",count(*) from DB1.bid_record_*** union all
+select "bid_record_***",count(*) from DB1.bid_record_*** union all
+select "bid_record_***",count(*) from DB1.bid_record_*** 
+.....
+```
+When you try to use `select concat...` above, do pay very close attention to those single quotes and double quotes mixing with the commas, for it can be very confusing.  `select concat...` generate a txt over 10000 rows, with a RAM less than 8GB, we'd better use `source` to execute this, and partition it into several parts then put them into execution in case the RAM is not big enough. At last, I combined these excels' outcome, named as count_all_DB1.xls, then do the same thing on the new server, we would get count_all_DB2.xls, then combine these two excels, and we can analyze which table's backup is in trouble.
+# `information_schema table`[^1][^2]
+At the end of this article, I'd like to share some knowledge on  information_schema table.
+The SHOW commands are more common in daily sql tasks for most beginers. However, they do not conform to the SQL:2003 standard. 
+MySQL 5.0 comes to the rescue with INFORMATION_SCHEMA tables. Using SELECT along with INFORMATION_SCHEMA,
+you can retrieve metadata from these tables about databases, tables, columns, and so on. INFORMATION_SCHEMA tables return considerably more information than SHOW commands. [MySQL 5.7 Reference Manual CH24](
+https://dev.mysql.com/doc/refman/5.7/en/information-schema.html) offers detail discussion, including every table in INFORMATION_SCHEMA database.
+
+
+# Reference
+[^1]: Michael Kofler, The definitive guide to MySQL 5, Apress (2005)
+[^2]: MySQL 5.7 Reference Manual
