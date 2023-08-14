@@ -4,15 +4,15 @@ layout: splash
 
 title: Validate Mysql Database Backup
 ---
-<!DOCTYPE html>
+<!---<!DOCTYPE html>这句话是真不能加。加了就显示在文章摘要里。-->
 <head>
   <title>Validate Mysql Database Backup</title>
 <style>
 code {
   font-family: Consolas,"courier new";
-  color: crimson;
-  background-color: #f1f1f1;
-  padding: 2px;
+  color: white;
+  background-color: black;
+  padding: 0;
   font-size: 90%;
 }
 </style>
@@ -26,28 +26,28 @@ The most awkward situation is that the hard disk is soon being full, it has 1 TB
 </p>
 <h1>Action</h1>
 First, output all the sql file names into one sql file so that you can source them into the server as a whole. Use dir command( ref the DOS doc), choose the appropriate path as you want, 
-  <pre>
+  <br>
   <code>
     dir >E:\MarData\export.sql
   </code>
-  </pre>
+  <br>
 Open export.sql, add key words "source + directory(where you store all the data file that is in the form of sql)" at the beginning of each line, then add command suffix at the end (which is ; in the case of mysql, ultraedit and notepad++ are  recommended),then start up the Microsoft terminal services client,  log onto the server, and execute codes below, to load the item-by-item data into the server: 
   <pre>
   <code>
     mysql -uroot -p*****
-    use <the database name>; 
+    use &lt;the database name&gt;; 
     tee E:/MarLog.txt;
     source E:/MarData/import.sql;
   </code>
   </pre>
-
+<span style="color: red">Note</span> that &lt;&gt; stands for a place holder.
 
 </body>
 
 
 
 
-==**Note that <> stands for a place holder.**==
+
 You'd better be able to tell the difference between \ and /, or there would be errors like:
 ```sql
 unknown command ‘\M’、unknown command ‘\b’
