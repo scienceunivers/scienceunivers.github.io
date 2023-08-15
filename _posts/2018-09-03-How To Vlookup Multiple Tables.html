@@ -21,12 +21,19 @@ github md竟然不支持公式，还是preview的时候支持，commit后就不�
   padding: 0;
   font-size: 90%;
 }
+  pre {
+  font-family: Consolas,"courier new";
+  color: white;
+  background-color: black;
+  padding: 0;
+  font-size: 90%;
+}
 </style>
 </head>
 <body>
 <p>
 In daily work with tables, expecially in excel, we usually apply the vlookup function to match values where the lookup area is just one array or one sheet. But, have you considered that how to vlookup value across multiple sheets?  I know that most people will suppose these areas have the same fields, so they can utilize Kutools for excel which can simplify the task of combining multiple sheets significantly. But here, I will introduce you some purely $excelish$ way to solve these problems.
-<br><br>
+<br>
 Suppose I have the following worksheets:
 </p>
 <!---
@@ -62,8 +69,7 @@ https://stackoverflow.com/questions/24319505/how-can-one-display-images-side-by-
 ![doc-vlookup-from-multiple-sheets-3](/assets/images/doc-vlookup-from-multiple-sheets-3.png){:style="display:inline; margin-left:auto; margin-right:auto"}
 -->
 <h1>Vlookup Values From Multiple Worksheets With Normal Formula</h1>
-  <br>
-  <code>
+  <pre>
 =IFERROR(
 		VLOOKUP($A2,Sheet1!$A$2:$B$5,2,FALSE),
 		IFERROR(
@@ -71,8 +77,7 @@ https://stackoverflow.com/questions/24319505/how-can-one-display-images-side-by-
 				VLOOKUP($A2,Sheet3!$A$2:$B$5,2,FALSE)
 				)
 		) 
-  </code>
-  <br>
+  </pre>
 <p>
 From sheet 1 to sheet 3, these are the lookup areas, we want to lookup Names corresponding to the ID across these three tables. And the formula is fairly straight forward, it uses nested IFERROR function, which means if it can find right values in the first VLOOKUP, then done; if not, then proceed to the nested part, and try the inner VLOOKUP, if the inner VLOOKUP can do the job, then done, or proceed again into the deeper VLOOKUP. It is obvious that if there are N lookup area, then we must form N-1 layer of nested IFERRORs.
 </p>
@@ -82,6 +87,8 @@ Below is our table that we want to populate by looking up the Product Code in co
 </p>
 <p align="center">
 <img src="/assets/images/doc-vlookup-from-multiple-sheets-5.png" />
+</p>
+<p>
 The challenge is that the product code information could be on other sheets:
 </p>
 <p float="left">
@@ -91,15 +98,16 @@ The challenge is that the product code information could be on other sheets:
 </p>
 <p>
 The first thing is to enter a list of sheet names and give them a named range, for example, SheetList (consists of sheet2, sheet3, sheet4). Suppose A4 is the cell of the first value that we want to look up.
+</p>
   <br>
   <code>
-=VLOOKUP(A4,INDIRECT("'"&INDEX(SheetList,MATCH(1,--(COUNTIF(INDIRECT("'"&SheetList&"'!$A$1:$c$4"),A4)>0),0))&"'!$A$1:$c$4"),2,FALSE)
+    =VLOOKUP(A4,INDIRECT("'"&INDEX(SheetList,MATCH(1,--(COUNTIF(INDIRECT("'"&SheetList&"'!$A$1:$c$4"),A4)>0),0))&"'!$A$1:$c$4"),2,FALSE)
   </code>
   <br>
 Let's first take a look at the innermost part 
   <br>
   <code>
-INDIRECT("'"&SheetList&"'!$A$1:$c$4")
+    INDIRECT("'"&SheetList&"'!$A$1:$c$4")
   </code>
   <br>
 it returns a reference specified by a text string, and the single quote is a symbol for names in excel and & stands for concatenation, so the COUNTIF will become COUNTIF('SheetList'!\$A\$1:\$c\$4, A4), it is checking each sheet in the SheetList to find a match. If it finds a match it counts 1. So the name SheetList here performs a role that allow COUNTIF to find matches in three different sheets, which is a little amazing. And since the  SheetList has multiple components, COUNTIF will return a set-like or an array-like thing wrapped by curly brackets, which in this case is {1;0;0}.
