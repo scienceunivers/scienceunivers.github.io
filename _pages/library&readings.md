@@ -9,3 +9,5 @@ In future, I plan to upgrade this library, enrich its features, renovate this po
 
 Materials I'm recently reading: [recent readings](https://github.com/scienceunivers/scienceunivers.github.io/blob/master/files/recent%20readings.md)
 <!---/files/recent readings.md，链接用这个的话，从内部access，中文有乱码。-->
+
+[Google site ownership verification](/files/googlec2ae789d2751c522.html)
