@@ -40,12 +40,12 @@ First, output all the sql file names into one sql file so that you can source th
   <!--不能用<pre><code>了，段落间距太大，而且有些额外的渲染，比如没文字的一行也会用code css来渲染一下，很难看。
   -->
 Open export.sql, add key words "source + directory(where you store all the data file that is in the form of sql)" at the beginning of each line, then add command suffix at the end (which is ; in the case of mysql, ultraedit and notepad++ are  recommended),then start up the Microsoft terminal services client,  log onto the server, and execute codes below, to load the item-by-item data into the server: 
-  <pre>
-    mysql -uroot -p*****
-    use &lt;the database name&gt;; 
-    tee E:/MarLog.txt;
-    source E:/MarData/import.sql;
-  </pre>
+<pre>
+  mysql -uroot -p*****
+  use &lt;the database name&gt;; 
+  tee E:/MarLog.txt;
+  source E:/MarData/import.sql;
+</pre>
 <span style="color: red">Note</span> that &lt;&gt; stands for a place holder.
 <br>
 You'd better be able to tell the difference between \ and / in your command containing directories, or there would be errors like:
@@ -55,21 +55,21 @@ You'd better be able to tell the difference between \ and / in your command cont
   </code>
 <br>
 The process lasts about 5 hours to 2 days, depending on the data size. Errors may step into the process, like:
-  <pre>
+<pre>
 Error 1062 <23000> duplicate entry ‘20117321’ for key ‘PRIMARY’
 Error 1064 <20000> row column doesn’t match
-  </pre>
+</pre>
 I omit them due to lacking time to deal with it. When the source process ends, check to ensure if the latest data in the month has been inserted successfully, One way is to see the consecutivity of BID_TIME_DATE and SUCCESS_TIME_DATE:
-  <pre>
-    select BID_TIME_DATE 
-    from &lt;table name&gt; 
-    order by BID_TIME_DATE desc 
-    limit 10;
-    select SUCCESS_TIME_DATE 
-    from &lt;table name&gt;  
-    order by SUCCESS_TIME_DATE desc 
-    limit 10;
-  </pre>
+<pre>
+  select BID_TIME_DATE 
+  from &lt;table name&gt; 
+  order by BID_TIME_DATE desc 
+  limit 10;
+  select SUCCESS_TIME_DATE 
+  from &lt;table name&gt;  
+  order by SUCCESS_TIME_DATE desc 
+  limit 10;
+</pre>
 When I insert data in April 2017, error occurs:
   <pre>
     Error 1114 08171016 bid_record_*** is full.
