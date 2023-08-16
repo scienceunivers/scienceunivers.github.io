@@ -154,7 +154,13 @@ Thanks to this article <a href="http://www.111cn.net/database/mysql/45964.htm">m
 <p>
 When you try to use `select concat...` above, do pay very close attention to those single quotes and double quotes mixing with the commas, for it can be very confusing.  `select concat...` generate a txt over 10000 rows, with a RAM less than 8GB, we'd better use `source` to execute this, and partition it into several parts then put them into execution in case the RAM is not big enough. At last, I combined these excels' outcome, named as count_all_DB1.xls, then do the same thing on the new server, we would get count_all_DB2.xls, then combine these two excels, and we can analyze which table's backup is in trouble.
 </p>
-<h1><a id="link-to-anchor-4">`information_schema table`</a><a href="#1">[1]</a><a href="#2">[2]</a></h1>
+<h1>
+  <a id="link-to-anchor-4">`information_schema table`</a>
+  <a id="1" href="#note-1">[1]</a>
+  <a id="2" href="#note-2">[2]</a>
+</h1>
+<!--id是为了别的链接链接到这个id，href是链接到id是note-1的地方。要使底下的note能再回到这个注释符号，必须设置从注释到底下note的链接，和底下到note到这两个注释编号的链接，相当于链接形成闭环。
+-->
 <p>
 At the end of this article, I'd like to share some knowledge on  information_schema table.
 </p>
@@ -164,7 +170,9 @@ MySQL 5.0 comes to the rescue with INFORMATION_SCHEMA tables. Using SELECT along
 </p>
 <hr>
 <hr>
-<p id="1">Michael Kofler, The definitive guide to MySQL 5, Apress (2005)<a href="#1">&#8617;</a></p>
-<p id="2">MySQL 5.7 Reference Manual<a href="#2">&#8617;</a></p>
+<ol type=1>
+<li id="note-1">Michael Kofler, The definitive guide to MySQL 5, Apress (2005)</li><a href="#1">&#8617;</a>
+<li id="note-2">MySQL 5.7 Reference Manual</li><a href="#2">&#8617;</a>
+</ol>
 </body>
 
