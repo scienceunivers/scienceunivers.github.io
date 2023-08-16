@@ -1,0 +1,140 @@
+---
+type: posts
+layout: splash
+title: Validate Mysql Database Backup
+---
+<!---<!DOCTYPE html>这句话是真不能加。加了就显示在文章摘要里。-->
+<head>
+  <title>Validate Mysql Database Backup</title>
+<style>
+  code {
+  color: white;
+  background-color: black;
+  padding: 0;
+}
+  pre {
+  color: white;
+  background-color: black;
+  padding: 0px;
+  margin: 0px;
+}
+</style>
+</head>
+
+<body>
+<nav class="toc" aria-labelledby="toc-label">
+	<h2 id="toc-label">Contents</h2>
+	<ul class="clean-list">
+		<li><a href="#link-to-anchor-1">Locate the real problem</a></li>
+		<li><a href="#link-to-anchor-2">Try to forcibly load all the data into destination</a></li>
+		<li><a href="#link-to-anchor-3">Create tables alike</a></li>
+    <li><a href="#link-to-anchor-4">Load as many as possible</a></li>
+    <li><a href="#link-to-anchor-5">Conclusion</a></li>
+	</ul>
+</nav>
+<!--
+ [Validate Mysql Database Backup](https://mp.csdn.net)这篇文章生成了count_all_DB1.xls，count_all_DB2.xls，在excel中做一些简单的比较，把备份后新旧数据库记录数不一致的表找了出来，一共38张表。下面的问题是，备份失真的表名有了，如何修复这些失真呢？这部分工作于2017年12月完成。
+-->
+<hr>
+<h1><a id="link-to-anchor-1">Locate the real problem</a></h1>
+The most natural way is to export the source data from 破电脑DB1 and import it into 新服务器DB2 to see what will happen more closely. eg:
+<pre>
+  select * from DB1.borrow_list_yin***           into outfile "e:/date/borrow_list_yin***.txt";
+  select * from DB1.borrow_list_an***            into outfile "e:/date/borrow_list_an***.txt";
+  select * from DB1.borrow_list_xiaoyou***       into outfile "e:/date/borrow_list_xiaoyou***.txt";
+</pre>
+These're only a minority of the codes. Also, in case of information leaking, I covered some individual names or variables. The pop-up messages after execution tell us that the process of export has no problem, so we've got to load these txt data into DB2 again to see if something wierd will happen then. There maybe already some data in the tables inside DB2, so we should drop things standing in our way.
+<pre>
+  delete from DB2.borrow_list_yin***;
+  delete from DB2.borrow_list_an***;
+  delete from DB2.borrow_list_xiaoyou***;
+</pre>
+Then load:
+<pre>
+  load data infile "e:/date/borrow_list_yin***.txt"          into table DB2.borrow_list_yin***;
+  load data infile "e:/date/borrow_list_an***.txt"           into table DB2.borrow_list_an***;
+  load data infile "e:/date/borrow_list_xiaoyou***.txt"      into table DB2.borrow_list_xiaoyou***;
+</pre>
+Once the loading is done, we can see from the prompting messages that the number of rows affected in those 38 tables are the same as when we did it the first time in DB2. We came into an identical situation as we are in originally, nothing changed in those 38 tables. Secrets are buried in the prompting error messages. There's ERROR 1062:
+<pre>
+duplicate entry for key loanid
+</pre>
+whose meaning couldn't be more obvious. <b>Since we deleted the content in the 38 tables first, so the duplicates must be in the loaded files themselves, that is, there are replications in the 38 tables we dumped out from the start point</b>. More precisely and confusingly but true, there are duplicate keys in the 38 tables in DB1. The reason why I call it confusing is that I checked the result of <code>show create table</code> that have created those 38 tables, there's indeed a UNIQUE constraint on the loanid, so I really don't know how this could happen, how those DBA cram all those duplicate records into these tables. One possibility is he created the table first, then use <code>alter table</code> to alter constraints or some tricks alike.
+<h1><a id="link-to-anchor-2">Try to forcibly load all the data into destination</a></h1>
+<h2>——that is, left the 38 tables unchanged when migrating.</h2>
+I began with the tables into which no rows were loaded. To completely prevent accidently damaging the tables in DB1 and DB2, I migrated the 38 tables to my laptop T470, on which I will perform the forcibly reloadling mentioned in the subtitle.
+Not surprisingly, I ran into a problem when trying to load data into mysql on T470. The error message says: 
+<code>The MySQL server is running with the --secure-file-priv option so it cannot execute this statement.</code>
+<h2>System variable</h2>
+<code>--secure-file-priv</code> is a system variable, MySQL server maintains many system variables that configure its operation. System variables can be set at server startup using options on the command line or in an option file (eg. ini file or conf file for windows and linux seperately). Most of them can be changed dynamically at runtime using <code>SET</code>.
+<blockquote>
+At runtime, setting a global system variable value requires the SUPER privilege. Setting a session system variable value normally requires no special privileges and can be done by any user, although there are exceptions. 
+</blockquote>
+<blockquote>
+There are several ways to see the names and values of system variables:
+To see the values that a server will use based on its compiled-in defaults and any option files that it reads, use this command:
+<code>mysqld --verbose --help</code>
+</blockquote>
+But this command will result in a very very long output. Not very useful in practice. To see the current values used by a running server, use the <code>SHOW VARIABLES</code> or the Performance Schema system variable tables. eg:
+<pre>
+show variables like "secure%";
+</pre>
+Its Command-Line Format is --secure-file-priv=dir_name, dir_name here is the path you will use to store the file ready to be loaded or already dumped out. If you don't put your files in the right path (eg. the dir_name), it will warn you that <code>The MySQL server is running with the --secure-file-priv option so it cannot execute this statement.</code> Another point to notice is this variable only have been set default value in mysql version later than 5.7.6, before which it is merely an empty string.
+This variable is used to limit the effect of data import and export operations, such as those performed by the <code>LOAD DATA</code> and <code>SELECT ... INTO OUTFILE</code> statements and the <code>LOAD_FILE()</code> function. <a id="1" href="#note-1">[1]</a>
+If you  can't find the dir_name, consider revealing the hidden folders.  See <a href="https://blog.csdn.net/haiyang_duan/article/details/61206393">MySQL5.7插入数据+“secure-file-priv”错误</a>
+<h1><a id="link-to-anchor-3">Create tables alike</a></h1>
+Surely you can't use 
+<pre>
+create table tbl_name col_name 
+data_type [NOT NULL | NULL] [DEFAULT default_value]
+      [AUTO_INCREMENT] [UNIQUE [KEY]] [[PRIMARY] KEY]
+      [COMMENT 'string']...
+</pre>
+directly, one way is to <code>create table like table_name</code>, but you don't have an already existing one. One answer is <code>mysqldump</code>:
+<pre>
+mysqldump -uroot -p*** DB1 borrow_list_ok***&gt;e:/borrow_list_ok***.sql
+</pre>
+then go to my own server on T470, throw data into my database.
+<pre>
+mysql -uroot -p*** testdatabase<h:/borrow_list_ok***.sql
+ERROR 1062 (23000) at line 62: Duplicate entry 'FP0000016325' for key 'LOANID'
+</pre>
+Notice that the mysql program must use sql file rather than txt. And it can import the table structure, while the load sytax can not. <b>Although it's possible that no data or only a small portion of data is imported, its table structure is definitely imported. But <code>mysql...&gt;...</code> command will stop right away when it runs across records that don't conform to constraints. So up to now, the only reasonable way for me is to <code>load data infile</code>. Let's load and see.</b>
+<h1><a id="link-to-anchor-4">Load as many as possible</a></h1>
+<pre>
+mysql -uroot -p***
+tee d:/ImportLog.txt;
+Use testdatabase;
+set max_error_count=9999;
+load data infile "C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/borrow_list_ok***.txt" ignore into table testdatabase.borrow_list_ok***;
+Query OK, 4149 rows affected, 3 warnings (0.26 sec)
+Records: 4152  Deleted: 0  Skipped: 3  Warnings: 3
+show warnings;
+mysql> show warnings;
++---------+------+-----------------------------------------+
+| Level   | Code | Message                                 |
++---------+------+-----------------------------------------+
+| Warning | 1062 | Duplicate entry '4064' for key 'LOANID' |
+| Warning | 1062 | Duplicate entry '4060' for key 'LOANID' |
+| Warning | 1062 | Duplicate entry '4059' for key 'LOANID' |
+</pre>
+<h2>Tee and max_error_count</h2>
+Several lines worth attention. 
+<br>
+First, <code>tee</code>, very handy when analysjing operational problems, performs like a primary logging system. And <code>tee</code> also has another function, that is it can act as a substitute for <code>select ...into</code>, if something goes wrong using `select ...into`,you can just use tee to record all those outcomes into a txt file. 
+<br>
+Second, <code>max_error_count</code>, because I know there's gonna be a lot of warnings since there are too many duplicates, so set it to a large enough value to hold all the warnings beforehand. 
+<br>
+Third, <code>load....ignore</code>, ignore the duplicate keys, so mysql won't stop when running into identical keys. 
+<br>
+Fourth, <code>show warnings</code>, this command has a  very small memory cache.
+<br>
+Look at the warnings, and look back at execution messages, 4149 + 3 = 4152, conclusion is coming right out ： <code>load</code> can only load unique keys (eg. loanid).
+<h1><a id="link-to-anchor-5">Conclusion</a></h1>
+Now that we have figured out what caused the difference in number of records in each of the 38 tables, and we have tried to rescue them, hoping not to lose the original records, which have failed. We have to take some compromsing methods to hold as many records as possible. It needs further exploration.
+
+<hr>
+<hr>
+<ol type=1>
+<li id="note-1">MySQL 5.7 Reference Manual, Server System Variables</li><a href="#1">&#8617;</a>
+</ol>
