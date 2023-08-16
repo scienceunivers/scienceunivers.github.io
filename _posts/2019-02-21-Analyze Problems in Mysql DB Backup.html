@@ -96,7 +96,7 @@ mysqldump -uroot -p*** DB1 borrow_list_ok***&gt;e:/borrow_list_ok***.sql
 </pre>
 then go to my own server on T470, throw data into my database.
 <pre>
-mysql -uroot -p*** testdatabase<h:/borrow_list_ok***.sql
+mysql -uroot -p*** testdatabase&lt;h:/borrow_list_ok***.sql
 ERROR 1062 (23000) at line 62: Duplicate entry 'FP0000016325' for key 'LOANID'
 </pre>
 Notice that the mysql program must use sql file rather than txt. And it can import the table structure, while the load sytax can not. <b>Although it's possible that no data or only a small portion of data is imported, its table structure is definitely imported. But <code>mysql...&gt;...</code> command will stop right away when it runs across records that don't conform to constraints. So up to now, the only reasonable way for me is to <code>load data infile</code>. Let's load and see.</b>
