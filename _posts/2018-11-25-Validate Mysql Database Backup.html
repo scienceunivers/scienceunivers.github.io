@@ -50,8 +50,7 @@ First, output all the sql file names into one sql file so that you can source th
     dir >E:\MarData\export.sql
   </code>
   <br>
-  <!--不能用<pre><code>了，段落间距太大，而且有些额外的渲染，比如没文字的一行也会用code css来渲染一下，很难看。
-  -->
+<!--<pre>需要顶格，不然显示效果会变得很难看。-->
 Open export.sql, add key words "source + directory(where you store all the data file that is in the form of sql)" at the beginning of each line, then add command suffix at the end (which is ; in the case of mysql, ultraedit and notepad++ are  recommended),then start up the Microsoft terminal services client,  log onto the server, and execute codes below, to load the item-by-item data into the server: 
 <pre>
   mysql -uroot -p*****
