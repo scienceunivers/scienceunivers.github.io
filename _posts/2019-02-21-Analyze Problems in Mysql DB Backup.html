@@ -1,11 +1,11 @@
 ---
 type: posts
 layout: splash
-title: Validate Mysql Database Backup
+title: Analyze Problems in Mysql DB Backup
 ---
 <!---<!DOCTYPE html>这句话是真不能加。加了就显示在文章摘要里。-->
 <head>
-  <title>Validate Mysql Database Backup</title>
+  <title>Analyze Problems in Mysql DB Backup</title>
 <style>
   code {
   color: white;
@@ -110,7 +110,7 @@ load data infile "C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/borrow_list_ok**
 Query OK, 4149 rows affected, 3 warnings (0.26 sec)
 Records: 4152  Deleted: 0  Skipped: 3  Warnings: 3
 show warnings;
-mysql> show warnings;
+mysql&gt; show warnings;
 +---------+------+-----------------------------------------+
 | Level   | Code | Message                                 |
 +---------+------+-----------------------------------------+
@@ -121,7 +121,7 @@ mysql> show warnings;
 <h2>Tee and max_error_count</h2>
 Several lines worth attention. 
 <br>
-First, <code>tee</code>, very handy when analysjing operational problems, performs like a primary logging system. And <code>tee</code> also has another function, that is it can act as a substitute for <code>select ...into</code>, if something goes wrong using `select ...into`,you can just use tee to record all those outcomes into a txt file. 
+First, <code>tee</code>, very handy when analysjing operational problems, performs like a primary logging system. And <code>tee</code> also has another function, that is it can act as a substitute for <code>select ...into</code>, if something goes wrong using <code>select ...into</code>,you can just use tee to record all those outcomes into a txt file. 
 <br>
 Second, <code>max_error_count</code>, because I know there's gonna be a lot of warnings since there are too many duplicates, so set it to a large enough value to hold all the warnings beforehand. 
 <br>
