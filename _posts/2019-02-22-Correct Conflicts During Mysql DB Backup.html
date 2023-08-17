@@ -1,0 +1,184 @@
+---
+type: posts
+layout: splash
+title: Correct Conflicts During Mysql DB Backup
+---
+<!---<!DOCTYPE html>这句话是真不能加。加了就显示在文章摘要里。-->
+<head>
+  <!--
+  <title>Correct Conflicts During Mysql DB Backup</title>
+  -->
+<style>
+  code {
+  color: white;
+  background-color: black;
+  padding: 0;
+}
+  pre {
+  color: white;
+  background-color: black;
+  padding: 0px;
+  margin: 0px;
+}
+</style>
+</head>
+<body>
+<nav class="toc" aria-labelledby="toc-label">
+	<h2 id="toc-label">Contents</h2>
+	<ul class="clean-list">
+		<li><a href="#link-to-anchor-1">Determine the plan</a></li>
+		<li><a href="#link-to-anchor-2">Export 38 tables out and load data</a></li>
+		<li><a href="#link-to-anchor-3">Select them out by first_update_time</a></li>
+    <li><a href="#link-to-anchor-4">Obstacles</a></li>
+    
+	</ul>
+</nav>
+<!--
+ Validate Mysql Database Backup这篇文章中，我生成了count_all_DB1.xls，count_all_DB2.xls，把备份后新旧数据库记录数不一致的表找了出来，一共38张表。Analyze Problems in Mysql DB Backup分步复现restore过程，找出了问题所在。这一篇就谈如何解决问题，考虑保留first_update_time最大的记录，首先从旧数据库导出建表sql。本部分工作于2017年12月完成。
+-->
+<hr>
+<h1><a id="link-to-anchor-1">Determine the plan</a></h1>
+<b><span style="background-color: yellow;">For duplicate records, the most natural way to solve it is to preserve the latest, first_update_time column is the yardstick against which we will use to measure which record is the latest. Once the latest are picked out, we could use them to replace the older ones.</span>
+</b>
+There's no time-controlling arguments in <code>load</code> syntax, you can't pick up the latest ones in <code>load</code>. And if you use <code>insert</code>, it has essentially the same effect. One powerful way is combination of different commands described below.
+<h1><a id="link-to-anchor-2">Export 38 tables out and load data</a></h1>
+Write a batch file below to get required sql files:
+<pre>
+mysqldump -uroot -p*** DB1 borrow_list_wzdai&gt;e:/borrow_list_wz***.sql
+mysqldump -uroot -p*** DB1 borrow_list_yinker&gt;e:/borrow_list_yin***.sql
+mysqldump -uroot -p*** DB1 borrow_list_anxin&gt;e:/borrow_list_an***.sql
+...
+</pre>
+This will export 38 tables from DB1 in a blink of an eye. Then import the table structure into the mysql server on T470 (my laptop) to keep DB1 untouched during manipulation: 
+<pre>
+mysql -uroot -p*** DB1_error_38&lt;H:/明细数据备份问题/导出38张表所有的loan_id重复的记录/sqldata/borrow_list_wz***.sql
+mysql -uroot -p*** DB1_error_38&lt;H:/明细数据备份问题/导出38张表所有的loan_id重复的记录/sqldata/borrow_list_yin***.sql
+mysql -uroot -p*** DB1_error_38&lt;H:/明细数据备份问题/导出38张表所有的loan_id重复的记录/sqldata/borrow_list_an***.sql
+</pre>
+Next, load data into these ready-to-go tables. Remember to delete the content beforehand. Table names, syntaxes, and other things can be edited in a batch manner in notepadd++.
+<pre>
+tee d:/ImportLog.txt;
+use wdzj_error_38;
+set max_error_count=30000;
+delete from borrow_list_1811;
+delete from borrow_list_2401;
+delete from borrow_list_2570;
+...
+<br>
+load data infile "C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/txtdata/borrow_list_1811.txt"              ignore into table wdzj_error_38.borrow_list_1811;
+show warnings;
+load data infile "C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/txtdata/borrow_list_2401.txt"              ignore into table wdzj_error_38.borrow_list_2401;
+show warnings;
+load data infile "C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/txtdata/borrow_list_2570.txt"              ignore into table wdzj_error_38.borrow_list_2570;
+show warnings;
+</pre>
+Don't forget to add <code>show warnings</code> at each end of the load snytax in order to get the duplicate loanid column.
+You'll see information prompting for a while similar to below:
+<pre>
+Database changed
+Query OK, 0 rows affected (0.00 sec)
+Query OK, 1624 rows affected (0.10 sec)
+Query OK, 1414 rows affected (0.27 sec)
+Query OK, 209883 rows affected (1 min 11.01 sec)
+...
+Query OK, 1624 rows affected, 21 warnings (1.02 sec)
+Records: 1645  Deleted: 0  Skipped: 21  Warnings: 21
++---------+------+----------------------------------------+
+| Level   | Code | Message                                |
++---------+------+----------------------------------------+
+| Warning | 1062 | Duplicate entry '325' for key 'LOANID' |
+| Warning | 1062 | Duplicate entry '317' for key 'LOANID' |
+| Warning | 1062 | Duplicate entry '318' for key 'LOANID' |
+| Warning | 1062 | Duplicate entry '319' for key 'LOANID' |
+| Warning | 1062 | Duplicate entry '320' for key 'LOANID' |
+...
+Query OK, 2320 rows affected, 236 warnings (0.52 sec)
+Records: 2556  Deleted: 0  Skipped: 236  Warnings: 236
++---------+------+----------------------------------------+
+| Level   | Code | Message                                |
++---------+------+----------------------------------------+
+| Warning | 1062 | Duplicate entry '76' for key 'LOANID'  |
+| Warning | 1062 | Duplicate entry '77' for key 'LOANID'  |
+| Warning | 1062 | Duplicate entry '78' for key 'LOANID'  |
+| Warning | 1062 | Duplicate entry '79' for key 'LOANID'  |
+| Warning | 1062 | Duplicate entry '80' for key 'LOANID'  |
+| Warning | 1062 | Duplicate entry '81' for key 'LOANID'  |
+| Warning | 1062 | Duplicate entry '82' for key 'LOANID'  |
+...
+</pre>
+<h1><a id="link-to-anchor-3">Select them out by first_update_time</a></h1>
+These are lots of warnings for duplicate key values. Question coming: how could we tell which table these warnings belong to? There are no associated table names along with the warning messages. One way is to count how many rows these newly imported table have, which can be easily linked to the messages recorded in the txt produced by <code>tee</code>.
+So a side work we should do is select table name and the number of rows of each table.
+<pre>
+select "borrow_list_1811"              ,count(*) from wdzj_error_38.borrow_list_1811              union all
+select "borrow_list_2401"              ,count(*) from wdzj_error_38.borrow_list_2401              union all
+select "borrow_list_2570"              ,count(*) from wdzj_error_38.borrow_list_2570              union all
+select "borrow_list_2910"              ,count(*) from wdzj_error_38.borrow_list_2910              
+...
+</pre>
+Then we could find how many duplicate rows each table has, using excel lookup function or just the built-in find box. Then, we can write sql for getting the duplicate rows for each table in DB1, picking out the duplicate rows in DB1. We use one table as a demo:
+<pre>
+# borrow_list_51c***
+tee d:/SelectDupliLog_borrow_list_51c***.txt;
+select * from
+(
+(
+	(select * from DB1.borrow_list_51c*** where loan_id=2844  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2827  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2826  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2825  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2804  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2793  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2798  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2791  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2785  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2780  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2778  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2759  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2733  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2773  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2756  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2643  order by first_update_time desc limit 1) union all
+	(select * from DB1.borrow_list_51c*** where loan_id=2642  order by first_update_time desc limit 1) 
+) as SelectDupli_borrow_list_51c***
+)
+into outfile 'e:/SelectDupli_borrow_list_51c***.txt';
+notee;
+</pre>
+Codes above are performed on DB1, it IS troublesome to edit so much <code>select</code> syntax. Sure you can substitute these selects with precedures or functions using a bunch of loops.
+<h2>Subqueries</h2>
+There are some tricky point when you right nested select statements, which is officially called subquery.
+<blockquote>
+The main advantages of subqueries are:
+They allow queries that are structured so that it is possible to isolate each part of a statement.
+They provide alternative ways to perform operations that would otherwise require complex joins and unions.
+Many people find subqueries more readable than complex joins or unions. Indeed, it was the innovation of subqueries that gave people the original idea of calling the early SQL “Structured Query Language.”<a id="1" href="#note-1">[1]</a>
+</blockquote>
+For additional resources, see  <a href="https://blog.csdn.net/gdp12315_gu/article/details/51210190">【MySQL】 into outfile csv格式文件添加 字段</a>. 
+There is an special case:
+<pre>
+select * from wdzj.borrow_list_99jur*** where loan_id like '%S072108'  order by first_update_time desc limit 1
+</pre>
+When the loan_id is not in the form of numbers, you can treat it as strings, with wild cards. For details of wild cards, see mysql 5.7 doc.
+One of the outcome is :
+<pre>
+2288	2844	顺欣宝约标王某NO:006	200000	15.0000	0	6	每月付息到期还本	抵押标	http://www.51c***.com/#/borrowDetail/2844	*忠浩	2016-10-10 10:19:12	
+</pre>
+The last step was to replace the corresponding records in T470 with those whose first_update_time is the latest.
+<pre>
+tee d:/LoadDataReplaceLog.txt;
+/*load data infile "C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/SelectDupliResult/SelectDupli_borrow_list_1811.txt"             replace into table wdzj_error_38.borrow_list_1811;*/
+load data infile "C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/SelectDupliResult/SelectDupli_borrow_list_2401.txt"             replace into table wdzj_error_38.borrow_list_2401;
+load data infile "C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/SelectDupliResult/SelectDupli_borrow_list_2570.txt"             replace into table wdzj_error_38.borrow_list_2570;
+load data infile "C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/SelectDupliResult/SelectDupli_borrow_list_2910.txt"             replace into table wdzj_error_38.borrow_list_2910;
+...
+</pre>
+Alright, all the job is done, we successfully found the root of the duplicate key error, and took out a plan to solve it, fortunately the plan worked out not bad, which is not the usual case. The rest of the mission is to migrate the correct data to DB2 from the middle server T470.
+<h1><a id="link-to-anchor-4">Obstacles</a></h1>
+In reality, things does not develop as smoothly as the article describes, various emergencies often jump in the way every now and then. I will discuss these trivial stories in a seperate essay later, see <a href="link to be filled">http://link</a>.
+
+<hr>
+<hr>
+<ol type=1>
+<li id="note-1">MySQL 5.7 Reference Manual</li><a href="#1">&#8617;</a>
+</ol> 
