@@ -1,7 +1,7 @@
 ---
-type: posts
-layout: splash
-author_profile: true
+
+
+
 title: How to Install Ubuntu in Another Partition with Windows XP Already in One Partition
 ---
 # How to Install Ubuntu in Another Partition with Windows XP Already in One Partition
