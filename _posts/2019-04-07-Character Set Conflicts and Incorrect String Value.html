@@ -28,7 +28,7 @@ tags: mysql
 	<h2 id="toc-label">Contents</h2>
 	<ul class="clean-list">
 		<li><a href="#link-to-anchor-1">Character Set Conflicts</a></li>
-		<li><a href="#link-to-anchor-2">Messy words when <code>selecting into</code> a file</a></li>
+		<li><a href="#link-to-anchor-2">Incorrect String Value: '\xD6\xD0\xB9...</a></li>
 		<li><a href="#link-to-anchor-3">Visualizer</a></li>
 
 	</ul>
@@ -49,32 +49,51 @@ Those records that were truncated are all messy characters.
 show variables like ‘character%’;
 </pre>
 This tells me information about character set. `use DB;` in the following table stands for situations or the environment we are in after executing the command `use DB;`
-
-
-  <!--
-
-
-   \    | Database  | Server
----------|-----------|---------
-T470     | Utf8   |    Utf8
-DB2    |   Latin1|    Latin1
-T470(use DB;)     | Utf8|      Utf8
-DB2 (use DB;)   | Utf8  |   Latin1
-```sql
+<table>
+  <tr>
+    <th></th>
+    <th>Database char set</th>
+    <th>Server char set</th>
+  </tr>
+  <tr>
+    <td>T470</td>
+    <td>Utf8</td>
+    <td>Utf8</td>
+  </tr>
+  <tr>
+    <td>DB2</td>
+    <td>Latin1</td>
+    <td>Latin1</td>
+  </tr>
+  <tr>
+    <td>T470(use DB;)</td>
+    <td>Utf8</td>
+    <td>Utf8</td>
+  </tr>
+  <tr>
+    <td>DB2 (use DB;)</td>
+    <td>Utf8</td>
+    <td>Latin1</td>
+  </tr>
+</table>
+<pre>
 set character_set_database=utf8; 
 set character_set_server=utf8;
-```
-Naturally, one will use set to change the value of character set, but this doesn't work for my problem. I changed the value of default character set in `my.ini`, restart the sql service, it doesn't work too. I even tried `alter database DB2 default character set=utf8;`, then restart the sql service, those messy characters still there when I send queries to particular table. [MySQL之对数据库库表的字符集的更改](https://www.cnblogs.com/Richardzhu/p/4462779.html) gives me an explanation on why `alter` won't work. Here are some heuristic info in mysql 5.7 doc: 
->==character_set_database==: The character set used by the default database. The server sets this variable whenever the default database changes. If there is no default database, the variable has the same value as character_set_server.
-.
-==Replication and Character Sets==: If the master has databases with a character set different from the global character_set_server value, you should design your CREATE TABLE statements so that they do not implicitly rely on the database default character set. A good workaround is to state the character set and collation explicitly in CREATE TABLE statements.
-
-So, normally speaking, there shouldn't be problems if a defaut database's (database being used) character set is set to utf8 (which contains almost every word in Chinese) already, whatever the server character set is.
+</pre>
+Naturally, one will use set to change the value of character set, but this doesn't work for my problem. I changed the value of default character set in `my.ini`, restart the sql service, it doesn't work too. I even tried `alter database DB2 default character set=utf8;`, then restart the sql service, those messy characters still there when I send queries to particular table. <a id="1" href="#note-1">1</a> Here are some heuristic info in mysql 5.7 doc: 
+  <br>
+<blockquote>
+<b>character_set_database</b>: The character set used by the default database. The server sets this variable whenever the default database changes. If there is no default database, the variable has the same value as character_set_server.
+<b>Replication and Character Sets</b>: If the master has databases with a character set different from the global character_set_server value, you should design your CREATE TABLE statements so that they do not implicitly rely on the database default character set. A good workaround is to state the character set and collation explicitly in CREATE TABLE statements.
+</blockquote>
+So, normally speaking, there shouldn't be problems if a default database's (database being used) character set is set to utf8 (which contains almost every word in Chinese) already, whatever the server character set is.
+<br>
 But the most sarcastic and annoying thing is that I suddenly found that the messy character disappeared after a usual restart of server. I even couldn't recall which step is the critical one leading to this ridiculous recover.
-# Incorrect String Value: '\xD6\xD0\xB9...
-This is a isolated subject and have nothing to do with character set discussed above. I put this down here just to record a problematic case when I operate mysql.
+<h1><a id="link-to-anchor-2">Incorrect String Value: '\xD6\xD0\xB9...</a></h1>
+This is a isolated subject and have nothing to do with character set discussed above. I put this down here just to record a problematic case loosely related to characters.
+<br>
 When I log on the server, recheck the character set, a wierd message popped into my eyes.
-```sql
+<pre>
 mysql> show variables like 'character set%';
 Empty set, 1 warning (0.07 sec)
 mysql> show warnings;
@@ -84,20 +103,24 @@ mysql> show warnings;
 | Warning | 1366 | Incorrect string value: '\xD6\xD0\xB9\xFA\xB1\xEA...' for column 'VARIABLE_VALUE' at row 496 |
 +---------+------+----------------------------------------------------------------------------------------------+
 1 row in set (0.00 sec)
-```
+</pre>
 I found `VARIABLE_VALUE` in the `information_schema.global_variables table`,
-```sql
+<pre>
 select * from information_schema.global_variables limit 1;
-```
-There's an another warning: `The 'INFORMATION_SCHEMA.GLOBAL_VARIABLES' feature is disabled; see the documentation for 'show_compatibility_56'`
-Here's the mysql 5.7 doc:[^1]
->you can use the show_compatibility_56 system variable, which affects whether MySQL 5.6 compatibility is enabled with respect to how system and status variable information is provided by the INFORMATION_SCHEMA and Performance Schema tables, and also by the SHOW VARIABLES and SHOW STATUS statements. 
-
-So put it in lain words, `show_compatibility_56` is a variable controlling compatibility with mysql 5.6. To solve Incorrect String Value: '\xD6\xD0\xB9... problem, just enter the below and punch enter (You have to reset it on again when logging onto the server next time, the variable is not in `my.ini`):
-```sql
+</pre>
+There's an another warning: <code>The 'INFORMATION_SCHEMA.GLOBAL_VARIABLES' feature is disabled; see the documentation for 'show_compatibility_56'</code>
+Here's the mysql 5.7 doc:<a id="2" href="#note-2">2</a>
+<blockquote>
+you can use the show_compatibility_56 system variable, which affects whether MySQL 5.6 compatibility is enabled with respect to how system and status variable information is provided by the INFORMATION_SCHEMA and Performance Schema tables, and also by the SHOW VARIABLES and SHOW STATUS statements. 
+</blockquote>
+So put it in lain words, <code>show_compatibility_56</code> is a variable controlling compatibility with mysql 5.6. To solve Incorrect String Value: '\xD6\xD0\xB9... problem, just enter the below and punch enter (You have to reset it on again when logging onto the server next time, the variable is not in <code>my.ini</code>):
+<pre>
 set global show_compatibility_56 =on;
-```
-# Reference
-[^1]: MySQL 5.7 Reference Manual
-  -->
-  
+</pre>
+
+<hr>
+<hr>
+<ol type=1>
+<li id="note-1"><a href="https://www.cnblogs.com/Richardzhu/p/4462779.html">MySQL之对数据库库表的字符集的更改</a>gives me an explanation on why `alter` won't work. </li><a href="#1">&#8617;</a>
+<li id="note-2">mysql 5.7 documentation</li><a href="#2">&#8617;</a>
+</ol> 
