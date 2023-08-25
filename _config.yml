@@ -301,7 +301,8 @@ defaults:
       comments: true
       share: true
       related: true
-defaults:
+      mathjax: true
+
   # _pages
   - scope:
       path: ""
