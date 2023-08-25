@@ -1,0 +1,105 @@
+---
+type: posts
+layout: default
+title: Miscellaneous Tricks in Mysql Backup Correction
+---
+<head>
+  <!--
+  <title>Correct Conflicts During Mysql DB Backup</title>
+  -->
+<style>
+  code {
+  color: white;
+  background-color: black;
+  padding: 0;
+}
+  pre {
+  color: white;
+  background-color: black;
+  padding: 0px;
+  margin: 0px;
+}
+</style>
+</head>
+<body>
+<nav class="toc" aria-labelledby="toc-label">
+	<h2 id="toc-label">Contents</h2>
+	<ul class="clean-list">
+		<li><a href="#link-to-anchor-1">Reserved keywords</a></li>
+		<li><a href="#link-to-anchor-2">Messy words when <code>selecting into</code> a file</a></li>
+		<li><a href="#link-to-anchor-3">Visualizer</a></li>
+    <li><a href="#link-to-anchor-4">How to tell the real RAM occupation</a></li>
+    <li><a href="#link-to-anchor-5">RegEx</a></li>
+    <li><a href="#link-to-anchor-6">Batched renaming</a></li>
+    <li><a href="#link-to-anchor-7">Memory bank collapse</a></li>
+    <li><a href="#link-to-anchor-8">Copying files onto remote desktop</a></li>
+    <li><a href="#link-to-anchor-9">Truncated incorrect DOUBLE value</a></li>
+
+	</ul>
+</nav>
+<!--
+ [Validate Mysql Database Backup]这篇文章中，我生成了count_all_DB1.xls，count_all_DB2.xls，把备份后新旧数据库记录数不一致的表找了出来，一共38张表。[Analyze Problems in Mysql DB Backup]分步复现restore过程，找出了问题所在。[Correct Conflicts During Mysql DB Backup]保留了first_update_time最大的记录，用折中的方式解决了问题。中间各种幺蛾子肯定很多的，这篇文章就来谈一谈。
+关键词：Reserved keywords,Messy characters,Visualizer,recource manager,RegEx, Scintilla’s definitions of words, rename, Memory bank, mstsc, Truncated incorrect DOUBLE value
+-->
+<hr>
+<h1><a id="link-to-anchor-1">Reserved keywords</a></h1>
+<code>describe table</code>, then use the columns returned to query records. But mysql keeps reminding that there's error near the column "usage", the reason is that usage is one of the reserved words of mysql, the reserved word should be surrounded with backticks `.
+<h1><a id="link-to-anchor-2">Messy words when <code>selecting into</code> a file</a></h1>
+Use <code>tee</code> to write the returned table into a txt instead.
+<h1><a id="link-to-anchor-3">Visualizer</a></h1>
+sqlyog, workbench, DB visualizer, Navicat are good options.
+<h1><a id="link-to-anchor-4">How to tell the real RAM occupation</a></h1>
+When I operate on the clunky think center, it happens that the computer get stuck at certain point. I start up the task manager, it says the memory is completely occupied. Interestingly, there is another place revealing the occupation of memory, called resource monitor. Which should we believe? 
+  <br>
+In task manager, there's a counter named Total Physical Memory reserved by an individual process, this provides us the common memory information. In resource mointor, there are a lot more simiar counter recording memery information, including committed, working set, shared, private, etc.
+  <br>
+<b>The Total physical memory reserved by individual processes in Task Manager and the Used Physical Memory in Resource Monitor are the same. They both show the total memory that are being consumed by all of the processes. There is a slight difference between the data of Task Manager and Resource Monitor because Task Manageralso includes the nonpaged and paged pool.<a id="1" href="#note-1">1</a></b>
+  <br>
+Right click one process, select turn to detailed information, it will jump to the detailed information tab in task manager, and you can see for a particular process, Total physical memory reserved by individual process is slightly larger than Memorty (private) in detailed information. And Memorty (private) in detailed information is the same as Private (KB) in resource monitor.
+  <br>
+As for counters in resource manager, they comform to this equation: working set = shared +private. Commited is about virtual memory, can't be fitted into this equation.
+<h1><a id="link-to-anchor-5">RegEx</a></h1>
+Very powerful tool for batch editing. It will save you a lot of time when editing many sql in similar structure. RegEx meaning wlll vary on different APPs or platforms.
+  <br>
+To know the meanings of the symbols, refer to the Notepad++ UserManual. Maybe I can write a serie of articles focusing on some application in regular expression in the future. 
+  <br>
+In notepad doc, there's a definition requiring introspection:<code>\&lt;</code>. This matches the start of a word using Scintilla's definitions of words. How to understand Scintilla's definitions of words? Here's a explanation from <a href="https://www.scintilla.org/ScintillaDoc.html#Words">Scintilla's definitions of words</a>: Words are contiguous sequences of characters from a particular set of characters. 4 categories define words: word, whitespace, punctuation, and line ends with each category having a role in word functions. <b>Double clicking selects the word at that point, which may be a sequence of word, punctuation, or whitespace bytes. That is, a word is seperated by word, whitespace, punctuation, or line ends. You should tell the difference between word ends and line ends when using regex.</b>
+<h1><a id="link-to-anchor-6">Batched renaming</a></h1>
+There are times when you need to rename a bunch of files, which is the most tedious task if you rename one by one. Here you can use cmd command <code>rename</code> to give your files new names, just remember pick the right encoding in notepad++ (ANSI), or there will be messy characters spreading the cmd screen. Refer to the MS DOS doc for precise usage.
+<h1><a id="link-to-anchor-7">Memory bank collapse</a></h1>
+The old server clunks when in service, and it was out of order in the morning at 20171123, when I pressed the start button, it bursted into a sharp alarm sound. I had to turn myself to a hardware engineer to fix it.
+  <br>
+First free the charges on your body by touching something metal. Mainboard has different alarms corresponding with different situations, and different kinds of CMOS produced by various manufacturers have different alarm modes, <a href="https://www.lifewire.com/amibios-beep-codes-2624543">AMIBIOS Beep Code Troubleshooting</a> is what we need because our machine's CMOS is ami aptio.
+The alarm (1 Long Beep + 3 Short Beeps) tells us the RAM crashed. The regular method is to change the memory bank, but when I pulled the memory bank out of the sink, and insert them back several times, then the computer is running again. Don't know why. The hell of it, as long as it runs again!
+<h1><a id="link-to-anchor-8">Copying files onto remote desktop</a></h1>
+This technique is simple, in which <code>mstsc.exe</code> plays a crucial role, I take advantage of it just to simplify the copying of files between two computers. And third party remote desk software like ToDesk, meshgrid are good options too.
+There are a lot of teaching materials on the internet. Change settings in the controlling panel, set up an account, if you can't copy files onto the target machine, run the task manager on the target machine, close <code>rdpclip</code> (it is used to control  file copying between computers), then start it up again.
+<h1><a id="link-to-anchor-9">Truncated incorrect DOUBLE value</a></h1>
+When I executed the following codes:
+<pre>
+# borrow_list_wz***
+tee e:/SelectDupliLog/SelectDupliLog_borrow_list_wz***.txt;
+select * from
+(
+(
+(select * from DB1.borrow_list_wz*** where loan_id = 756129 order by first_update_time desc limit 1) union all
+(select * from DB1.borrow_list_wz*** where loan_id = 756132 order by first_update_time desc limit 1) union all
+(select * from DB1.borrow_list_wz*** where loan_id = 756133 order by first_update_time desc limit 1) union all
+...
+(select * from DB1.borrow_list_wz*** where loan_id = 756377 order by first_update_time desc limit 1) union all
+(select * from DB1.borrow_list_wz*** where loan_id = 776634 order by first_update_time desc limit 1) 
+) as SelectDupli_borrow_list_wz***
+)
+into outfile 'e:/SelectDupli_borrow_list_wz***.txt';
+notee;
+</pre>
+There are 65535 warnings freaking me out, it even excesses the upper limit of max_error_count. The warnings are all <code>Truncated incorrect DOUBLE value: ‘a1743’</code> and alike. <a id="2" href="#note-2">2</a>Stack Overflow[^3] tells me that "This message means you're trying to compare a number and a string in a WHERE or ON clause", まさか …… the loan_id 756129 is defined as a string when the wz*** table was created? Probably yes. Because If we change 756129 in SelectDupli.sql script to `like ‘% 756129 ’`, the warnings then goes away.
+
+<hr>
+<hr>
+<ol type=1>
+<li id="note-1">https://answers.microsoft.com/en-us/windows/forum/windows_10-performance/what-is-the-difference-between-total-physical/e39e339a-8ddb-4cc9-a8d5-7667a34b2c8b</li><a href="#1">&#8617;</a>
+<li id="note-2">https://stackoverflow.com/questions/16068993/error-code-1292-truncated-incorrect-double-value-mysql</li><a href="#2">&#8617;</a>
+
+
+</ol> 
