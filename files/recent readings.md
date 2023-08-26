@@ -1,4 +1,4 @@
-<!-- -*- coding: utf8 -*- -->
+<!-- -*- coding: utf8bom -*- -->
 
 # Readings you might be interested in:
 
