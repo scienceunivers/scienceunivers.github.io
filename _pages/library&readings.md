@@ -7,7 +7,6 @@ For now, you can go through all the book names in this [link](/files/20230802232
 
 In future, I plan to upgrade this library, enrich its features, renovate this poor looking, making it more like a real library. But now we'd better take what we have at this moment.
 
-Materials I'm recently reading: [recent readings](https://github.com/scienceunivers/scienceunivers.github.io/blob/master/files/recent%20readings.md)
+Materials I'm recently reading: [recent readings](/files/recent readings.md)
+<!---https://github.com/scienceunivers/scienceunivers.github.io/blob/master/files/recent%20readings.md-->
 <!---/files/recent readings.md，链接用这个的话，从内部access，中文有乱码。-->
-
-[Google site ownership verification](/googlec2ae789d2751c522.html)
