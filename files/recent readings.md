@@ -1,3 +1,5 @@
+<!-- -*- coding: utf-8 -*- -->
+
 # Readings you might be interested in:
 
 - 《毛泽东年谱(全九卷)》 (中央文献研究室) (Z-Library)
