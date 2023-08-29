@@ -1,7 +1,7 @@
 ---
 type: posts
 layout: single
-toc: true
+classes: wide
 title: "Manipulating Excel Using Python: Real World Problem(Part 1) "
 ---
 <head>
@@ -22,12 +22,14 @@ title: "Manipulating Excel Using Python: Real World Problem(Part 1) "
   margin: 0px;
 }
 </style>
--->
 
 <link rel="stylesheet"
 	href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
+-->
+<link href="assets/css/prism.css" rel="stylesheet" />
+
 <!--html中高亮各种语言-->
 </head>
 <body>
@@ -58,7 +60,7 @@ I often come across situations like reading and writing xlsx, xls files without 
 <img src="/assets/images/2018-05-23-Manipulating Excel Using Python_Real World Problem(Part 1)-1.png" />
 </p>
 <pre>
-<code class="python">
+<code class="language-python">
 import xlrd, xlwt
 import pandas as pd, numpy as np
 import datetime as dt
@@ -88,45 +90,49 @@ for i in range(0, nCols):
 data = pd.DataFrame(workbookDict, columns=colNames)
 </code>
 </pre>
+
 Print the output:
 <pre>
-<code class="python">
+<code class="language-python">
 print(workbookDict)
 </code>
 </pre>
+
 <blockquote>
 {'是否删除': ['00734', '', '', '', '', '', '', '', '', '', '', '', '', '', 42], '平台编号': ['00734', '04309', '02541', '00858', '00345', '03452', '05406', '00019', '00161', '05242', '03453', '02127', '06890', '01792', 42], '平台名称': ['21世纪财富', '3000财富', '360易贷', '360贷贷网', '360金融', '365创投', '365天天利', '365易贷', '365金融', '369财富', '3A金融', '3a借贷', '51人品', '51信托', '51信托'], '平台数据库id': ['21caifu', '3000bank', '360edai', '360daidai', '360jinrong', '365ct', '365tianli', 'edai365', '365p2p', '369caifu', '3ajinrong', '3a10000', 42, '51xintuo！！', 42], '平台网址': ['http://www.21caifu.com.cn/', 'http://www.3000bank.com/', 'http://www.360edai.cn', 'http://www.360daidai.com/', 'http://www.360jinrong.com', 'http://www.365ct.com/', 'http://www.365tianli.com', 'http://www.365edai.cn', 'http://www.365p2p.cn/', 'http://www.369caifu.com/', 'http://www.3ajinrong.com/', 'http://www.3a10000.com', 'https://www.51rp.com', '', 42], '平台注册资本(万元)': [6000.0, 1000.0, 5000.0, 5000.0, 1000.0, 1000.0, 5000.0, 30308.0, 1000.0, 2000.0, 5000.0, '', 7000.0, '', 42], '平台地址': ['银川市金凤区康平路悦海新天地购物广场14号办公楼1509室', '山东省济南市高新区新泺大街786号南楼11层', '沈阳市铁西区兴华南街58-5号2810', '云南省昆明市西山区滇池路4公里中央购物金座1幢B单元1102号', '上海市浦东新区宣秋路139号1幢5084室', '潍坊市奎文区胜利东街与潍州路交叉口金融街1号楼D座1503', ...], '平台上线日期': [41903.0, 42110.0, 42128.0, 41746.0, 41712.0, 41609.0, 42048.0, 40210.0, 41528.0, 41947.0, 42214.0, 41456.0, 42125.0, 42078.0, 42078.0], '平台股东背景标志': ['民营系', '', '民营系', '民营系', '', '', '', '', '民营系', '', '', '', '', '民营系', ''], '是否问题平台': ['是', '是', '是', '是', '否', '是', '是', '否', '是', '是', '否', '是', '否', '否', 42], '数据采集标志': ['已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', 42], '问题类型': ['停业', '停业', '停业', '停业', '', '停业', '停业', '', '提现困难', '停业', '', '提现困难', '', '', 42], '资金存管方式': ['', '', '', '', '', '', '', '', '', '', '', '', '', '', 42], '平台注册省份': ['宁夏', '山东', '辽宁', '云南', '上海', '山东', '北京', '江苏', '广东', '广东', '北京', '山东', '浙江', '四川', 42], '平台注册地市': ['银川', '济南', '沈阳', '昆明', '浦东', '潍坊', '朝阳', '南京', '广州', '东莞', '东城', '济南', '杭州', '成都', 42], '业务类型': ['', '', '', '', '', '', '', '车贷:32%;融资租赁:1%;', '', '', '', '', '个人信贷:80%;消费金融:20%;', '', 42], '停运日期': [42043.0, 42767.0, 42705.0, 42566.0, '', 42761.0, 42351.0, '', 42208.0, 42593.0, '', 41586.0, '', '', 42], '增信模式': ['', '', '小贷公司,融资性担保公司,平台垫付', '融资性担保公司,,小贷公司', '', '', '', '风险准备金', '', '', '', '', '', ',挂钩信托', 42], ...}
 </blockquote>
 <span style="background-color:yellow">Here I used xlrd 1.2 to read xlsx, now it's been upgraded to version 2.0, doesn't support xlsx anymore.</span> According to its documentation, the trend of its development is to disgard xlsx, macro, VBA, hyperlinks, pictures etc., only keep the basic feature of reading xls.
 <h1><a id="link-to-anchor-3">Make error code be what they are and let 42 disappear</a></h1>
 We can see there are 42s in the output, it's #N/As, which needs further processing. <span style="background-color:yellow">How to transform these 42 to string '#N/A'? Or how to keep '#N/A' unchanged while reading?</span> It's better if we reserve what the data used to be when extracting them because we don't wanna see numeric 42 mixing with other numerical values when doing some analysis later on. Looks like all the error type in excel have their counterparts in xlrd. Yes, according to the documentation, 
-<blockquote>
+<pre>
+<code class="language-python">
 xlrd.biffh.error_text_from_code= {0: '#NULL!', 7: '#DIV/0!', 15: '#VALUE!', 23: '#REF!', 29: '#NAME?', 36: '#NUM!', 42: '#N/A'}
-</blockquote>
+</code>
+</pre>
 So we can pick up value 42 and assign '#N/A' to them? Well not much. What if there are some value that is really 42? We have to go farther to detect the 42s turning from #N/A, and leave the real numeric 42 there. One possible solution is to recognize if the cell value is an error value first, if it is, then see if it is 42.
-Fortunately in <code class="python">class xlrd.sheet.Sheet(book, position, name, number)</code>, there's <code>cell_type(rowx, colx)</code> method, tell us type of a cell:
+Fortunately in <code class="language-python">class xlrd.sheet.Sheet(book, position, name, number)</code>, there's <code class="language-python">cell_type(rowx, colx)</code> method, tell us type of a cell:
 <blockquote>
 cell_type(rowx, colx)
 Type of the cell in the given row and column.
 Refer to the documentation of the <code>Cell</code> class.
 </blockquote>
 
-In <code class="python">class xlrd.sheet.Cell</code>,we can see:
+In <code class="language-python">class xlrd.sheet.Cell</code>,we can see:
 
 <blockquote>
 Contains the data for one cell.
 <span style="color: yellow">Warning</span>
-You don’t call this class yourself. You access <code>Cell</code> objects via methods of the <code>Sheet</code> object(s) that you found in the <code>Book</code> object that was returned when you called <code>open_workbook()</code>.
+You don’t call this class yourself. You access <code>Cell</code> objects via methods of the <code>Sheet</code> object(s) that you found in the <code>Book</code> object that was returned when you called <code class="language-python">open_workbook()</code>.
 <br>
 Cell objects have three attributes: ctype is an int, value (which depends on ctype) and xf_index. If formatting_info is not enabled when the workbook is opened, xf_index will be None.
 </blockquote>
 
-PS: we can observe there's <code class="python">__slot__</code> in the source of <code>Cell</code> class, that means when creating class Cell, only those 3 attributes are allowed, make attribute access faster.
+PS: we can observe there's <code class="language-python">__slot__</code> in the source of <code>Cell</code> class, that means when creating class Cell, only those 3 attributes are allowed, make attribute access faster.
 <br>
-In the documentation of <code>class Cell</code>, there lists the types of cells and how their values are represented in Python. <code>ctype</code> is an int from 0 to 6, so are the return values of <code>cell_type()</code>.
-So if cell type is error, then <code>cell_type()</code> equals 5. We can validate this in source code of xlrd.biffh:
+In the documentation of <code class="language-python">class Cell</code>, there lists the types of cells and how their values are represented in Python. <code>ctype</code> is an int from 0 to 6, so are the return values of <code>cell_type()</code>.
+So if cell type is error, then <code class="language-python">cell_type()</code> equals 5. We can validate this in source code of xlrd.biffh:
 <pre>
-<code class="python">
+<code class="language-python">
 (
     XL_CELL_EMPTY,
     XL_CELL_TEXT,
@@ -138,8 +144,9 @@ So if cell type is error, then <code>cell_type()</code> equals 5. We can validat
 ) = range(7)
 </code>
 </pre>
-the type code are 0123456 respectively. So we just screen error cell using type codes. Once detected, according to <code>xlrd.biffh.error_text_from_code</code>, error cells can be divided further into following groups (can also be validated in source of xlrd.biffh):
+the type code are 0123456 respectively. So we just screen error cell using type codes. Once detected, according to <code class="language-python">xlrd.biffh.error_text_from_code</code>, error cells can be divided further into following groups (can also be validated in source of xlrd.biffh):
 <pre>
+<code class="language-python">
 #: This dictionary can be used to produce a text version of the internal codes
 #: that Excel uses for error cells.
 error_text_from_code = {
@@ -151,10 +158,11 @@ error_text_from_code = {
     0x24: '#NUM!',   # Value range overflow
     0x2A: '#N/A',    # Argument or function not available
 }
+</code>
 </pre>
 Up to this point, #N/A can be processed smoothly.
 <pre>
-<code class="python">
+<code class="language-python">
 for i in range(1, nRows):
     for j in range(nCols):
         if workbook.sheet_by_name(sheetNames[0]).cell_type(i, j) == 5:
@@ -172,14 +180,15 @@ pinnedColumnList = ['是否删除', '平台编号', '平台名称', '平台数�
                     '停运日期', '增信模式', '法人名称', '公司名称']
 data = data[pinnedColumnList]
 </code>
-</Pre>
+</pre>
 <span style="background-color:yellow">Question:</span> Can we use <code>pandas.read_excel</code> process #N/A?
 <br>
 The answer is yes, but with caution. <code>read_excel</code> has a parameter <code>na_values</code>. But all the error values are transformed to NaN, including null, so if you wanna tell error values apart, or highlight null values, it's not a good choice. A common senario is when using <code>vlookup</code>, <code>read_excel</code>'s lacking the ability to distinguish null and #N/A will be pain in the neck, because it cannot tell people which cell is successfully matched by <code>vlookup</code>.
 <h1><a id="link-to-anchor-4">Some preprocessing: data validation</a></h1>
 Next we examine each column, put some restrictions on the data for the purpose of preprocessing. Note the note in English, pointing out some pitfalls.
+
 <pre>
-<code class="python">
+<code class="language-python">
 # 平台编号、名称、数据库id不能为空，且符合各自的一般模式，比如平台编号是5位数字。
 # 考虑到有的数据源空值以#N/A填充，有的以空填充，但两者不会同时出现，是且的关系。可以通过测试的情况是：全#N/A，全空，没有#N/A且没有空。
 if '#N/A' in data[colNames[1]].values:
@@ -208,3 +217,4 @@ print('{} passed the pattern test.'.format(colNames[1]))
 # 第一部分是nan和NA不能共存的校验，第二部分是平台编号格式校验。
 </code>
 </pre>
+</body>
