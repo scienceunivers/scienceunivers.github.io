@@ -1,0 +1,206 @@
+---
+type: posts
+layout: single
+toc: true
+title: Manipulating Excel Using Python: Real World Problem(Part 1) 
+---
+<head>
+  <!--
+  <title>Title</title>
+  -->
+<style>
+  code {
+  color: white;
+  background-color: black;
+  padding: 0;
+}
+  pre {
+  color: white;
+  background-color: black;
+  padding: 0px;
+  margin: 0px;
+}
+</style>
+
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!--html中高亮各种语言-->
+</head>
+<body>
+<nav class="toc" aria-labelledby="toc-label">
+	<h2 id="toc-label">Contents</h2>
+	<ul class="clean-list">
+		<li><a href="#link-to-anchor-1">Which Package to use</a></li>
+		<li><a href="#link-to-anchor-2">Problem definition</li>
+		<li><a href="#link-to-anchor-3">Make error code be what they are and let 42 disappear</a></li>
+		<li><a href="#link-to-anchor-4">Some preprocessing: data validation</a></li>
+
+	</ul>
+</nav>
+<!--
+写一下推进p2p月报自动化项目时一些值得整理发布的话题。第一是包的选择，第二是读取问题的处理，第三是编码问题。
+-->
+<hr>
+While dealing excel files, many people are used to cope with various tasks with formulas and VBA. But there are flaws in both way, with formulas, there are still lots of operations requiring human intervention; with VBA, there will be a bunch of <code>Sub</code>, and the code is not suitable for process other formats or tasks such as pdf, txt or interaction with other application. This is where python comes into rescue.
+<h1><a id="link-to-anchor-1">Which Package to use</a></h1>
+There are a bunch of packages supporting processing excel, <a href="https://zhuanlan.zhihu.com/p/23998083">Python-Excel模块哪家强？</a> is a introductory yet detailed explanation of these packages, including xlwings, openpyxl, pandas, win32com, xlsxwriter, DataNitro, xlutils. This post is a bit of noisy, you totally don't have to experience all of them, what I recommend are xlwings, openpyxl, and another the author doesn't mention——xlrd, which is also the building block of openpyxl. A more informative list of python-excel packages is <a href="https://www.python-excel.org/">Working with Excel Files in Python</a>, including common packages and their brief introduction.
+<br>
+I often come across situations like reading and writing xlsx, xls files without macros and VBAs, so xlrd, xlwt, openpyxl, xlwings are my favorate. xlrd, xlwt only support xls format, and don't recognize formulas except values calculated by formulas, while openpyxl, xlsxwriter only support xlsx and provide a decent support for formulas.
+<br>
+<h1><a id="link-to-anchor-2">Problem definition</a></h1>
+<span style="background-color:yellow">Problem definition:</span>
+<p align="center">
+<img src="/assets/images/2018-05-23-Manipulating Excel Using Python_Real World Problem(Part 1)-1.png" />
+</p>
+<span style="background-color:yellow">This workbook contains some financial companies information, read this xlsx file into a DataFrame for further use.</span>
+<pre>
+<code class="python">
+import xlrd, xlwt
+import pandas as pd, numpy as np
+import datetime as dt
+import warnings, logging
+import re, string
+
+workbook = xlrd.open_workbook(r'D:\Program Files\Python\20180505test.xlsx')
+sheetNames = workbook.sheet_names()
+# 检验表名是否正确。
+if sheetNames[0] == '档案':
+    pass
+else:
+    raise Exception('Wrong sheet name.')
+if sheetNames[1] == '数据':
+    pass
+else:
+    raise Exception('Wrong sheet name.')
+
+# 把数据读取到字典中，转换为DataFrame。
+nRows, nCols = workbook.sheet_by_name(sheetNames[0]).nrows, workbook.sheet_by_name(sheetNames[0]).ncols
+colNames = []
+workbookDict = {}
+for i in range(0, nCols):
+    colNames.append(workbook.sheet_by_name(sheetNames[0]).col_values(i)[0])
+    workbookDict[workbook.sheet_by_name(sheetNames[0]).col_values(i)[0]] = \
+        workbook.sheet_by_name(sheetNames[0]).col_values(i)[1:]
+data = pd.DataFrame(workbookDict, columns=colNames)
+</code>
+</pre>
+Print the output:
+<pre>
+<code class="python">
+print(workbookDict)
+</code>
+</pre>
+<pre>
+{'是否删除': ['00734', '', '', '', '', '', '', '', '', '', '', '', '', '', 42], '平台编号': ['00734', '04309', '02541', '00858', '00345', '03452', '05406', '00019', '00161', '05242', '03453', '02127', '06890', '01792', 42], '平台名称': ['21世纪财富', '3000财富', '360易贷', '360贷贷网', '360金融', '365创投', '365天天利', '365易贷', '365金融', '369财富', '3A金融', '3a借贷', '51人品', '51信托', '51信托'], '平台数据库id': ['21caifu', '3000bank', '360edai', '360daidai', '360jinrong', '365ct', '365tianli', 'edai365', '365p2p', '369caifu', '3ajinrong', '3a10000', 42, '51xintuo！！', 42], '平台网址': ['http://www.21caifu.com.cn/', 'http://www.3000bank.com/', 'http://www.360edai.cn', 'http://www.360daidai.com/', 'http://www.360jinrong.com', 'http://www.365ct.com/', 'http://www.365tianli.com', 'http://www.365edai.cn', 'http://www.365p2p.cn/', 'http://www.369caifu.com/', 'http://www.3ajinrong.com/', 'http://www.3a10000.com', 'https://www.51rp.com', '', 42], '平台注册资本(万元)': [6000.0, 1000.0, 5000.0, 5000.0, 1000.0, 1000.0, 5000.0, 30308.0, 1000.0, 2000.0, 5000.0, '', 7000.0, '', 42], '平台地址': ['银川市金凤区康平路悦海新天地购物广场14号办公楼1509室', '山东省济南市高新区新泺大街786号南楼11层', '沈阳市铁西区兴华南街58-5号2810', '云南省昆明市西山区滇池路4公里中央购物金座1幢B单元1102号', '上海市浦东新区宣秋路139号1幢5084室', '潍坊市奎文区胜利东街与潍州路交叉口金融街1号楼D座1503', ...], '平台上线日期': [41903.0, 42110.0, 42128.0, 41746.0, 41712.0, 41609.0, 42048.0, 40210.0, 41528.0, 41947.0, 42214.0, 41456.0, 42125.0, 42078.0, 42078.0], '平台股东背景标志': ['民营系', '', '民营系', '民营系', '', '', '', '', '民营系', '', '', '', '', '民营系', ''], '是否问题平台': ['是', '是', '是', '是', '否', '是', '是', '否', '是', '是', '否', '是', '否', '否', 42], '数据采集标志': ['已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', '已采集', 42], '问题类型': ['停业', '停业', '停业', '停业', '', '停业', '停业', '', '提现困难', '停业', '', '提现困难', '', '', 42], '资金存管方式': ['', '', '', '', '', '', '', '', '', '', '', '', '', '', 42], '平台注册省份': ['宁夏', '山东', '辽宁', '云南', '上海', '山东', '北京', '江苏', '广东', '广东', '北京', '山东', '浙江', '四川', 42], '平台注册地市': ['银川', '济南', '沈阳', '昆明', '浦东', '潍坊', '朝阳', '南京', '广州', '东莞', '东城', '济南', '杭州', '成都', 42], '业务类型': ['', '', '', '', '', '', '', '车贷:32%;融资租赁:1%;', '', '', '', '', '个人信贷:80%;消费金融:20%;', '', 42], '停运日期': [42043.0, 42767.0, 42705.0, 42566.0, '', 42761.0, 42351.0, '', 42208.0, 42593.0, '', 41586.0, '', '', 42], '增信模式': ['', '', '小贷公司,融资性担保公司,平台垫付', '融资性担保公司,,小贷公司', '', '', '', '风险准备金', '', '', '', '', '', ',挂钩信托', 42], ...}
+</pre>
+<span style="color:yellow">Here I used xlrd 1.2 to read xlsx, now it's been upgraded to version 2.0, doesn't support xlsx anymore.</span> According to its documentation, the trend of its development is to disgard xlsx, macro, VBA, hyperlinks, pictures etc., only keep the basic feature of reading xls.
+<h1><a id="link-to-anchor-3">Make error code be what they are and let 42 disappear</a></h1>
+We can see there are 42s in the output, it's #N/As, which needs further processing. <span style="background-color:yellow">How to transform these 42 to string '#N/A'? Or how to keep '#N/A' unchanged while reading?</span> It's better if we reserve what the data used to be when extracting them because we don't wanna see numeric 42 mixing with other numerical values when doing some analysis later on. Looks like all the error type in excel have their counterparts in xlrd. Yes, according to the documentation, 
+<blockquote>
+xlrd.biffh.error_text_from_code= {0: '#NULL!', 7: '#DIV/0!', 15: '#VALUE!', 23: '#REF!', 29: '#NAME?', 36: '#NUM!', 42: '#N/A'}
+</blockquote>
+So we can pick up value 42 and assign '#N/A' to them? Well not much. What if there are some value that is really 42? We have to go farther to detect the 42s turning from #N/A, and leave the real numeric 42 there. One possible solution is to recognize if the cell value is an error value first, if it is, then see if it is 42.
+Fortunately in <code>class xlrd.sheet.Sheet(book, position, name, number)</code>, there's <code>cell_type(rowx, colx)</code> method, tell us type of a cell:
+<blockquote>
+cell_type(rowx, colx)
+Type of the cell in the given row and column.
+Refer to the documentation of the <code>Cell</code> class.
+</blockquote>
+
+In <code>class xlrd.sheet.Cell</code>,we can see:
+
+<blockquote>
+Contains the data for one cell.
+<span style="color: yellow">Warning</span>
+You don’t call this class yourself. You access <code>Cell</code> objects via methods of the <code>Sheet</code> object(s) that you found in the <code>Book</code> object that was returned when you called <code>open_workbook()</code>.
+<br>
+Cell objects have three attributes: ctype is an int, value (which depends on ctype) and xf_index. If formatting_info is not enabled when the workbook is opened, xf_index will be None.
+</blockquote>
+
+PS: we can observe there's <code>__slot__</code> in the source of <code>Cell</code> class, that means when creating class Cell, only those 3 attributes are allowed, make attribute access faster.
+<br>
+In the documentation of <code>class Cell</code>, there lists the types of cells and how their values are represented in Python. <code>ctype</code> is an int from 0 to 6, so are the return values of <code>cell_type()</code>.
+So if cell type is error, then <code>cell_type()</code> equals 5. We can validate this in source code of xlrd.biffh:
+<pre>
+(
+    XL_CELL_EMPTY,
+    XL_CELL_TEXT,
+    XL_CELL_NUMBER,
+    XL_CELL_DATE,
+    XL_CELL_BOOLEAN,
+    XL_CELL_ERROR,
+    XL_CELL_BLANK, # for use in debugging, gathering stats, etc
+) = range(7)
+</pre>
+the type code are 0123456 respectively. So we just screen error cell using type codes. Once detected, according to <code>xlrd.biffh.error_text_from_code</code>, error cells can be divided further into following groups (can also be validated in source of xlrd.biffh):
+<pre>
+#: This dictionary can be used to produce a text version of the internal codes
+#: that Excel uses for error cells.
+error_text_from_code = {
+    0x00: '#NULL!',  # Intersection of two cell ranges is empty
+    0x07: '#DIV/0!', # Division by zero
+    0x0F: '#VALUE!', # Wrong type of operand
+    0x17: '#REF!',   # Illegal or deleted cell reference
+    0x1D: '#NAME?',  # Wrong function or range name
+    0x24: '#NUM!',   # Value range overflow
+    0x2A: '#N/A',    # Argument or function not available
+}
+</pre>
+Up to this point, #N/A can be processed smoothly.
+<pre>
+<code class="python">
+for i in range(1, nRows):
+    for j in range(nCols):
+        if workbook.sheet_by_name(sheetNames[0]).cell_type(i, j) == 5:
+            if workbook.sheet_by_name(sheetNames[0]).cell_value(i, j) != 42:
+                # 保证后面只出现NA类型的错误。
+                raise Exception('Redundant kinds of errors in workbookDict at {}.'.format('[i, j]'))
+            if workbook.sheet_by_name(sheetNames[0]).cell_value(i, j) == 42:
+                data.iloc[i-1, j] = '#N/A'
+        if workbook.sheet_by_name(sheetNames[0]).cell_value(i, j) == '':
+            data.iloc[i - 1, j] = np.nan
+pinnedColumnList = ['是否删除', '平台编号', '平台名称', '平台数据库id', 
+                    '平台网址', '平台注册资本(万元)', '平台地址', '平台上线日期', 
+                    '平台股东背景标志', '是否问题平台', '数据采集标志', '问题类型', 
+                    '资金存管方式', '平台注册省份', '平台注册地市', '业务类型', 
+                    '停运日期', '增信模式', '法人名称', '公司名称']
+data = data[pinnedColumnList]
+</code>
+</Pre>
+<span style="background-color:yellow">Question:</span> Can we use <code>pandas.read_excel</code> process #N/A?
+<br>
+The answer is yes, but with caution. <code>read_excel</code> has a parameter <code>na_values</code>. But all the error values are transformed to NaN, including null, so if you wanna tell error values apart, or highlight null values, it's not a good choice. A common senario is when using <code>vlookup</code>, <code>read_excel</code>'s lacking the ability to distinguish null and #N/A will be pain in the neck, because it cannot tell people which cell is successfully matched by <code>vlookup</code>.
+<h1><a id="link-to-anchor-4">Some preprocessing: data validation</a></h1>
+Next we examine each column, put some restrictions on the data for the purpose of preprocessing. Note the note in English, pointing out some pitfalls.
+<pre>
+<code class="python">
+# 平台编号、名称、数据库id不能为空，且符合各自的一般模式，比如平台编号是5位数字。
+# 考虑到有的数据源空值以#N/A填充，有的以空填充，但两者不会同时出现，是且的关系。可以通过测试的情况是：全#N/A，全空，没有#N/A且没有空。
+if '#N/A' in data[colNames[1]].values:
+    if data[colNames[1]].isna().any():
+        # 统计NA与nan个数、位置。
+        positiveIndicator_pingtaibianhao = (~data[colNames[1]].isna()) & (data[colNames[1]] != '#N/A')
+        negetiveIndicator_pingtaibianhao = positiveIndicator_pingtaibianhao[positiveIndicator_pingtaibianhao == False]
+        warnings.warn('nan along with #N/A detected at index {} in {}.'.format(negetiveIndicator_pingtaibianhao.index,colNames[1]))
+    else:
+        print('{} passed the validity test. All blanks substituted with #N/A.'.format(colNames[1]))
+elif data[colNames[1]].isna().any():
+    print('{} passed the validity test. All blanks substituted with nan.'.format(colNames[1]))
+    # Attention: you can't use np.nan in logic arithmetic, because nan==nan is False, no sense.
+else:
+    print('{} passed the validity test. No blanks or #N/As.'.format(colNames[1]))
+
+# 平台编号是5位数字。
+criteria = data[colNames[1]].isna()
+# criteria here is used as a  middle variable, because nan can't be used in logic arithmetic, we have to use math.isnan()、pd.isna()、np.isnan(), but these methods cannot be applied to DataFrame boolean indexing, so a middle variable is necessary. 
+cleanColumn = data[colNames[1]][(data[colNames[1]] != '#N/A') & ~criteria].tolist()
+regEx = re.compile(r'^[0-9]{5,5}$')
+for i in range(len(cleanColumn)):
+    if regEx.match(str(cleanColumn[i])) is None:
+        raise Exception('Wrong pattern in non-NA and non-nan effective values in {} at index {}'.format(colNames[1], i))
+print('{} passed the pattern test.'.format(colNames[1]))
+# 第一部分是nan和NA不能共存的校验，第二部分是平台编号格式校验。
+</code>
+</pre>
