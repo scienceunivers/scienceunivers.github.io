@@ -1,6 +1,6 @@
 ---
 
-
+layout: single
 tags: Ubuntu dual-system markdown
 title: How to Install Ubuntu in Another Partition with Windows XP Already in One Partition
 ---
