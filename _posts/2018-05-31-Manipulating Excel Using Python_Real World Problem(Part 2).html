@@ -1,0 +1,192 @@
+---
+type: posts
+layout: single
+class: wide
+title: "Manipulating Excel Using Python: Real World Problem(Part 2)"
+tags: python, excel, xlrd, unicode, utf8
+---
+<head>
+  <!--
+  <title>Title</title>
+  
+  <style>
+  code {
+  color: white;
+  background-color: black;
+  padding: 0;
+  }
+  pre {
+  color: white;
+  background-color: black;
+  padding: 0px;
+  margin: 0px;
+  }
+  </style>
+  
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  -->
+  <!--html中高亮各种语言-->
+
+</head>
+<body>
+  <nav class="toc" aria-labelledby="toc-label">
+    <h2 id="toc-label">Contents</h2>
+    <ul class="clean-list">
+      <li><a href="#link-to-anchor-1">平台编号</a></li>
+      <li><a href="#link-to-anchor-2">Unicode and utf8</li>
+      <li><a href="#link-to-anchor-3">平台数据库id</a></li>
+      
+
+    </ul>
+  </nav>
+  <!--
+  写一下推进p2p月报自动化项目时一些值得整理发布的话题。第一是包的选择，第二是读取问题的处理，第三是编码问题。
+  -->
+  <hr>
+  <p>
+    Today let's resume <a href="/_posts/Manipulating Excel Using Python_Real World Problem(Part 1).html">Manipulating Excel Using Python: Real World Problem(Part 1)</a>, in part 1, we explore what packages to use when interacting with excel, present the definition of the problem, how to deal with error code 42, put some restrictions and validation rules on column 平台编号. Next, we will examine more columns, tackle with problems as we march.
+  </p>
+  <h1><a id="link-to-anchor-1">平台编号、平台名称</a></h1>
+  <pre>
+    <code class="language-python">
+# 平台名称不为空或#N/A。
+boolSeries = (~data[colNames[2]].isna()) & (data[colNames[2]] != '#N/A')
+# Here we need element wise boolean operation, can't use <code>and</code>, use <code>.__and__()</code> or <code>&</code>。
+if boolSeries.all():
+    print('{} passed the validity test. No nans or #N/As.'.format(colNames[2]))
+else:
+    falseSeries = boolSeries[boolSeries == False]
+    raise Exception('nan or #N/A detected in data at {}.'.format(falseSeries.index))
+    </code>
+  </pre>
+  <h1><a id="link-to-anchor-2">Unicode and utf8</a></h1>
+  <p>
+    Next I'm gonna validate the format of 平台名称. Obviously we need regular expressions. The core is to match Chinese characters, if you use Java, this can be ahieved by <code>\p{Script=Han}</code> or <code>p{Han}</code>, but attention that this assumes that your regex compiler meets some requirement like RL1.2 Properties from UTS#18 Unicode Regular Expressions. <a id="1" href="#note-1">1</a>
+    <br>
+    One way to grab Chinese using unicode is shown here <a href="https://stackoverflow.com/questions/2718196/find-all-chinese-text-in-a-string-using-python-and-regex%20#%20herongyang">Find all Chinese text in a string using Python and Regex</a>. Someone pointed out a template:
+    <pre>
+      <code class="language-python">
+import re
+sample = u'I am from 美国。We should be friends. 朋友。'
+for n in re.findall(ur'[\u4e00-\u9fff]+',sample):
+    print n
+      </code>
+    </pre>
+  </p>
+  <p>
+    But why ur'[\u4e00-\u9fff]+'? This is due to the encoding rule in unicode. The codes covering Chinese, can be found on many websites, here I want to diverge a little bit, as many folks wondering what the difference between unicode and utf8, which is also my mysery. Here I found an excellent answer by Cheng: <a href="https://stackoverflow.com/questions/643694/what-is-the-difference-between-utf-8-and unicode">What is the difference between UTF-8 and Unicode?</a>
+    <br>
+    <blockquote>
+      Let me use an example to illustrate this topic:
+      A chinese character:      汉
+      it's unicode value:       U+6C49
+      convert 6C49 to binary:   01101100 01001001
+      Nothing magical so far, it's very simple. Now, let's say we decide to store this character on our hard drive. To do that, we need to store the character in binary format. We can simply store it as is '01101100 01001001'. 
+    </blockquote>
+    </p>
+    <p>
+    When we need to store the binary codes on hard drive, there need to be a rule that dictates computer to recognize it, one of the rule is utf8. As in RFC3629:
+    <blockquote> 
+      strings can be fairly reliably recognized as such by a simple algorithm, i.e., the probability that a string of characters in any other encoding appears as valid UTF-8 is low, diminishing with increasing string length.
+      In UTF-8, characters from the U+0000..U+10FFFF range (the UTF-16 accessible range) are encoded using sequences of 1 to 4 octets.  The only octet of a "sequence" of one has the higher-order bit set to 0, the remaining 7 bits being used to encode the character number.  In a sequence of n octets, n>1, the initial octet has the n higher-order bits set to 1, followed by a bit set to 0.  The remaining bit(s) of
+      that octet contain bits from the number of the character to be encoded.  The following octet(s) all have the higher-order bit set to 1 and the following bit set to 0, leaving 6 bits in each to contain
+      bits from the character to be encoded.
+    </blockquote>
+    <blockquote>
+      The table below summarizes the format of these different octet types. The letter x indicates bits available for encoding bits of the character number.
+   
+      Char. number range  |        UTF-8 octet sequence
+         (hexadecimal)    |              (binary)
+      --------------------+---------------------------------------------
+      0000 0000-0000 007F | 0xxxxxxx
+      0000 0080-0000 07FF | 110xxxxx 10xxxxxx
+      0000 0800-0000 FFFF | 1110xxxx 10xxxxxx 10xxxxxx
+      0001 0000-0010 FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+    </blockquote>
+    The hyphen indicates "from to". So in short, unicode is a code-character mapping mechanism, and utf8 is a code transfer method making these code recognizable to computers.
+  </p>
+  <p>
+    In Python source code, Unicode literals are written as strings prefixed with the 'u' or 'U' character:u'abcdefghijk'. Specific code points can be written using the \u escape sequence, which is followed by four hex digits giving the code point. The \U escape sequence is similar, but expects 8 hex digits, not 4. So to validate 平台名称, here's the code:
+    <pre>
+      <code class="language-python">
+regEx = re.compile(u'[\u4e00-\u9fff]|[0-9]|[a-zA-Z]')
+for i in range(len(data[colNames[2]])):
+    if regEx.findall(data[colNames[2]][i]) is None:
+        raise Exception('Wrong pattern in non-NA and non-nan values in %s at index %s' % (colNames[1], i))
+print('%s passed the regex test.' % colNames[1])
+      </code>
+    </pre>
+    But on a second thought, this column actually need not being examined because there's names of platform like 'A+理财', and as long as there's a name or a symbol, not affecting data process, there's no need to bother thinking it over.
+  </p>
+  <h1><a id="link-to-anchor-3">平台数据库id</a></h1>
+  <pre>
+    <code class="language-python">
+# 平台数据库id，#N/A和空不能同时出现。
+if '#N/A' in data[colNames[3]].values:
+    if data[colNames[3]].isna().any():
+        # 统计NA与nan个数、位置的语句。positiveIndicator标记出不是nan也不是NA的元素。
+        positiveIndicator_shujukuid = (~data[colNames[3]].isna()) & (data[colNames[3]] != '#N/A')
+        negetiveIndicator_shujukuid = positiveIndicator_shujukuid[positiveIndicator_shujukuid == False]
+        warnings.warn('nan along with #N/A detected at index {} in {}.'.format(negetiveIndicator_shujukuid.index,colNames[3]))
+    else:
+        print('%s passed the validity test. All blanks substituted with #N/As in %s.' % (colNames[3],colNames[3]))
+elif data[colNames[3]].isna().any():
+    print('%s passed the validity test. All blanks substituted with nans in %s.' % (colNames[3],colNames[3]))
+else:
+    print('%s passed the validity test. No blanks or #N/As in %s.' % (colNames[3], colNames[3]))
+    </code>
+  </pre>
+  <pre>
+    <code class="language-python">
+# 可以用regex，输出不符合格式的单元格的index。
+invalidCounter = []
+regEx = re.compile(r'^[0-9a-z]+$',flags=re.IGNORECASE)
+# 严格match字母数字组合，忽略大小写。
+for i in range(len(data[colNames[3]])):
+    if regEx.match(str(data[colNames[3]].values[i])) is None:
+        # use str() because Pattern.match(string[, pos[, endpos]]) requires first parameters be 
+        # string.
+        if type(data[colNames[3]][i]) == float or data[colNames[3]][i]=='#N/A':
+            # if 数据库id is an int, it will be read as float into DataFrame.
+            pass
+        else:
+            invalidCounter.append(i)
+if invalidCounter != []:
+    print('Wierd DB id detected, indices are {}'.format(invalidCounter))
+else:
+    print('{} passed the format test.'.format(colNames[3]))
+    </code>
+  </pre>
+  <h1><a id="link-to-anchor-4">平台网址</a></h1>
+  <pre>
+    <code class="language-python">
+nanCounter = []
+NACounter = []
+invalidCounter = []
+for i in range(len(data[colNames[4]])):
+    if data[colNames[4]][i] is np.nan:
+        # nan belongs to float, which cannot be sliced, so we need to pick nans out.
+        nanCounter.append(i)
+    elif data[colNames[4]][i] == '#N/A':
+        NACounter.append(i)
+    elif data[colNames[4]][i][:5] not in 'http://'+'https://'+'www.':
+        invalidCounter.append(i)
+if (nanCounter != []) and (NACounter != []):
+    warnings.warn('Blanks and #N/As are accompanied. Blanks\' indices are {}, #N/As\' indices are {}.'.format(nanCounter,NACounter))
+elif invalidCounter == []:
+    print('Test passed. Blanks and #N/As are not accompanied. And foramt tests are passed.')
+else:
+    print('Blanks and #N/As are not accompanied. But web sites of wierd forms exist: indices are {}'.format(invalidCounter))
+    </code>
+  </pre>
+  <p>
+    Validating remaining columns is similar as the above, I won't chirp on them.
+  </p>
+  <hr>
+  <ol type=1>
+  <li id="note-1">https://stackoverflow.com/questions/9576384/use-regular-expression-to-match-any-chinese-character-in-utf-8-encoding</li><a href="#1">&#8617;</a>
+  </ol> 
+</body>
