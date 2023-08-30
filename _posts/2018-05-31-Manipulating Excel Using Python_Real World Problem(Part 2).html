@@ -95,7 +95,7 @@ for n in re.findall(ur'[\u4e00-\u9fff]+',sample):
       that octet contain bits from the number of the character to be encoded.  The following octet(s) all have the higher-order bit set to 1 and the following bit set to 0, leaving 6 bits in each to contain
       bits from the character to be encoded.
     </blockquote>
-    <blockquote>
+    <pre>
       The table below summarizes the format of these different octet types. The letter x indicates bits available for encoding bits of the character number.
    
       Char. number range  |        UTF-8 octet sequence
@@ -105,7 +105,7 @@ for n in re.findall(ur'[\u4e00-\u9fff]+',sample):
       0000 0080-0000 07FF | 110xxxxx 10xxxxxx
       0000 0800-0000 FFFF | 1110xxxx 10xxxxxx 10xxxxxx
       0001 0000-0010 FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-    </blockquote>
+    </pre>
     The hyphen indicates "from to". So in short, unicode is a code-character mapping mechanism, and utf8 is a code transfer method making these code recognizable to computers.
   </p>
   <p>
