@@ -127,7 +127,7 @@ so the formula becomes
 =VLOOKUP(A4,INDIRECT("'"&INDEX(SheetList,MATCH(1,{1;0;0},0))&"'!$A$1:$c$4"),2,FALSE)
   </code>
   <br>
-What does -- before COUNTIF mean? Many blogs don't give it an explanation, but I can present my deduction based on my experience on excel using. I think because the COUNTIF will return {1;0;0}, but {1;0;0} can't compare with 0 directly, so we need to convert it to some comparable form, which is - -'s(I typed a space in between to look more clearly) glorious mission. If you want to dig into this further, you can search "Why two minus signs "- -" in an excel formula" or something alike.
+What does -- before COUNTIF mean? Many blogs don't give it an explanation, the double hyphen is converting a list of boolean (true, false) values to ZEROs and ONEs, for convenience in comparing boolean values.
 <br>
 Then we go to the MATCH. The syntax for the MATCH function is: 
 MATCH(lookup_value, lookup_array, [match_type])
