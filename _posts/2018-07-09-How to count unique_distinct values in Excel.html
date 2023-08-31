@@ -2,8 +2,8 @@
 type: posts
 layout: single
 classes: wide
-title: "How to Count Unique/Distinct Values in Excel"
-tags: "excel" "array formula" "countif"
+title: "How to count unique/distinct values in Excel"
+tags: "excel" "array formula"
 ---
 <head>
   <!--  
@@ -93,7 +93,20 @@ tags: "excel" "array formula" "countif"
   </blockquote>
   <p>
     So to count distinct values, we exploit the feature that the addition of reciprocals of distinct counts equals to 1, sum all these 1s, we get final number of distinct values.
+    <br>
+    If you want to exclude blank cells, just add <code>&lt;&gt;""</code>, eg. <code class="language-excel formula">=SUM(IF(B2:B50&lt;&gt;"",1/COUNTIF(B2:B50, B2:B50), 0))</code>.
   </p>
-
+  <h1><a id="link-to-anchor-3">Using FREQUENCY and MATCH</a></h1>
+  <p>
+  <a href="https://www.excelforum.com/excel-formulas-and-functions/931374-counting-unique-cells-totally-excluding-duplicate-values.html">Counting unique cells - totally excluding duplicate values</a> puts up another way to count unique values.
+  <br>
+  <code class="language-excel formula">=SUM(IF(FREQUENCY(MATCH(A2:A8,A2:A8,0),ROW(A2:A8)-ROW(A2)+1)=1,1))</code>
+  <br>
+  This is also an array formula, <code>MATCH(lookup_value, lookup_array, [match_type])</code>, if match_type is set to 1, <code>MATCH</code> finds the first value that is exactly equal to lookup_value. The values in the lookup_array argument can be in any order. So the output of <code>MATCH(A2:A8,A2:A8,0)</code> would be {1;2;3;4;5;2;5}.
+  <br>
+  Syntax of FREQUENCY is <code>FREQUENCY(data_array, bins_array)</code>, <code>ROW(A2:A8)-ROW(A2)+1</code> would simply be {1;2;3;4;5;6;7}, aiming to act as the interval(bins_array) in FREQUENCY, facilitating to count the frequency of names, as for {1;2;3;4;5;6;7}, it will count numbers less or equal to 1, greater than 1 but less or equal to 2, ... so on. The output would be {1;2;1;1;2;0;0}, if all the names are unique, then there must be 1 count in each interval, in our case, it has some difference.
+  <br>
+  So the outcome of <code>IF({1;2;1;1;2;0;0}=1,1)</code> is {1;0;1;1;0;0;0}, you sum them up, get the number of unique values. The drawback of this method is that it requires there be no blank cells.
+</p>
   <script src="/assets/js/prism.js"></script>
 </body>
