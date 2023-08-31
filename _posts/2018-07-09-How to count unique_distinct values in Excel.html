@@ -52,9 +52,8 @@ tags:
     <br>
     Distinct values - these are all different values in the list, i.e. unique values plus 1st occurrences of duplicate values.
   </blockquote>
-  <pre>
     Yes, there's already a fancy <a href="https://www.ablebits.com/office-addins-blog/2016/04/07/how-to-count-distinct-and-unique-values-in-excel/">blog</a> clarifying this problem so well that there's no need writing a new one. I'll just do some notes on this blog.
-    
+  <pre>
     list of names |  unique   |  distinct
     --------------------+---------------------------
     Ronnie        | Ronnie    |  Ronnie  
@@ -75,7 +74,7 @@ tags:
   <div>
     How the Excel count unique values formula works? The confusing point is <code>COUNTIF</code>. In this example, COUNTIF(A2:A10,A2:A10) returns the array {1;2;2;1;2;2;2;1;2}, representing the counts of each name.
     <br>
-    Recall the grammar of IF: =IF(logical_test, [value_if_true], [value_if_false]), the IF function evaluates each value in the array returned by COUNTIF, keeps all 1's (unique values), and replaces all other values with zeros, it returns an array too, so the function IF(COUNTIF(A2:A10,A2:A10)=1,1,0) becomes IF({1;2;2;1;2;2;2;1;2} = 1,1,0), which means if value in array equals to 1, then return 1, else 0, reserving the unique value. Here the blog made a mistake that it lost the curly bracket around array, instead it uses round brackets to enclose it, which is wrong and very misleading.
+    Recall the grammar of IF: <code class="excel-formula">=IF(logical_test, [value_if_true], [value_if_false])</code>, the IF function evaluates each value in the array returned by COUNTIF, keeps all 1's (unique values), and replaces all other values with zeros, it returns an array too, so the function IF(COUNTIF(A2:A10,A2:A10)=1,1,0) becomes IF({1;2;2;1;2;2;2;1;2} = 1,1,0), which means if value in array equals to 1, then return 1, else 0, reserving the unique value. Here the blog made a mistake that it lost the curly bracket around array, instead it uses round brackets to enclose it, which is wrong and very misleading.
     <br>
     Finally, the SUM function adds up the values in the array returned by IF and outputs the total number of unique values, which is exactly what we wanted.
   </div>
