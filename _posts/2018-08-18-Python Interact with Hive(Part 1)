@@ -1,0 +1,357 @@
+---
+type: posts
+layout: single
+classes: wide
+title: "Python Interact with Hive(Part 1)"
+tags: 
+  - python
+  - Hive
+  - SQL
+  - pandas
+  - rule model
+---
+<head>
+  <!--  
+  <style>
+  code {
+  color: white;
+  background-color: black;
+  padding: 0;
+  }
+  pre {
+  color: white;
+  background-color: black;
+  padding: 0px;
+  margin: 0px;
+  }
+  </style>
+  
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  -->
+  <!--上面css和js目的是html中高亮各种语言，高亮效果不好。-->
+  <link href="/assets/css/prism.css" rel="stylesheet" />
+</head>
+<body>
+  <nav class="toc" aria-labelledby="toc-label">
+    <h2 id="toc-label">Contents</h2>
+    <ul class="clean-list">
+      <li><a href="#link-to-anchor-1">Count unique values</a></li>
+      <li><a href="#link-to-anchor-2">Count distinct values in Excel (unique and 1st duplicate occurrences)</li>
+      <li><a href="#link-to-anchor-3">平台数据库id</a></li>
+      
+    </ul>
+  </nav>
+  <!--
+  如何计数不重复的单元格。包括计算只出现一次的值的个数，计算互不相同值的个数。  -->
+  <hr>
+  Since the second half of 2018, I was involved in a P2P risk alert system building project, in charge of the risk rule part. In this serie, I will mark some interesting problems and their solutions along this mission. First we went through all the policies concerning P2P regulation, extract those that can be measured by numbers and decisions, then turn these rules from the policies into codes. 
+  <br>
+  To present company's risk, a natural thought is create a table, one column is company name or unique identifier like unified social credit code, another column should be the risk score of asssociated company. Additional columns may be appended.
+  <br>
+  To get the identifier, one efficient way is to connect the database, extract them from data stored till now. The data at hand is store in server clusters, specifically, on hive or hdfs. For the sake of data safety, we are not allowed to access them by terminal or Xshell, colleages from develop department set up vpn for us based on jupyterhub, so we can manipulate data from jupyter notebook using python via vpn, eventually get to raw data on hive.
+  <h1><a id="link-to-anchor-1">Set up the connection and variables</a></h1>
+  <pre>
+    <code class="language-python">
+import pandas as pd, numpy as np
+from pyhive import hive
+import pymysql
+import sqlalchemy
+import datetime as dt
+import os
+
+sqlCrecode = {} # SQL(HQL) regarding unified social credit code.
+sqlCrecodeName = {} # SQL(HQL) regarding company name.
+sqlOnlyId = {} # SQL(HQL) regarding the only id number of a debt claim.
+sqlVar ={} # SQL(HQL) representing variables or columns other than the above involved in sql.
+
+conn, cur = [], []
+conn.append(hive.Connection(host='172.18.1.202', port=10000, username='dev'))
+cur.append(conn[0].cursor())
+# conn.append(pymysql.connect(host="localhost",user="root",passwd="***"))
+# cur.append(conn[1].cursor())
+# databaseName = ['stats','ods','itf_prre','credi']
+
+cur[0].execute("describe ods.basic_collection_index")
+result1 = cur[0].fetchall()
+cur[0].execute("select * from ods.basic_collection_index limit 10")
+result2 = cur[0].fetchall()
+for i in range(len(result1)-70):
+    print(result1[i],result2[0][i])
+# This block aims to test the stability of the internet or the connection, 
+# because there are situations where sqls fetching tens of rows been running so long time 
+# that I need to interrupt it and rerun. Just wanna see if I have to rerun sometime.
+    </code>
+  </pre>
+Sometime jupyter will throw up following error:
+  <pre>
+    <code class="language-python">
+    ~/anaconda3/lib/python3.6/site-packages/thrift/transport/TSocket.py in read(self, sz)
+    115     def read(self, sz):
+    116         try:
+--&gt; 117             buff = self.handle.recv(sz)
+    118         except socket.error as e:
+    119             if (e.args[0] == errno.ECONNRESET and ...):
+    </code>
+  </pre>
+which mean there need to reconnect the database, possibly for session time out, or part of the partitions of tables are updating. Just re-execute the connection and cursor part of the above code.
+<h1><a id="link-to-anchor-2">Generate basicTable(unified social credit code and company name)</a></h1>
+  <pre>
+    <code class="python">
+# 获取社会信用代码。
+sqlCrecode['stats'] = '''select distinct %s as ssocialcrecode from %s union all
+                        select distinct %s as ssocialcrecode from %s '''\
+                        % ('ssocialcrecode','stats.nifa_business_zhaiq',
+                             'ssocialcrecode','stats.nifa_business_jinr') 
+ssocialcrecodeFromstats = pd.read_sql(sqlCrecode['stats'],conn[0])
+ssocialcrecodeFromstatsUniq = ssocialcrecodeFromstats.drop_duplicates()
+ssocialcrecodeFromstatsUniq.to_csv(r'/home/kylin/lizhichang/ssocialcrecodeFromstatsUniq.csv',encoding='utf-8',index=False)
+print(ssocialcrecodeFromstatsUniq)
+    </code>
+  </pre>
+  At the time I ran these sql, hive version in server is 1.0.0, not supporting select distinct, union, union distinct, I have to distinct duplicate social credit codes outside hql(drop_duplicates). 
+  <br>
+  When using <code>to_csv</code>, there may be an 'unnamed:0' column, that's because the parameter <code>index</code> is not set, set <code>index=False</code> and the unnamed column will disappear.
+  <pre>
+    <code class="language-python">
+# 获取社会信用代码和社会信用代码。
+sqlCrecode['ods'] = '''select distinct %s as ssocialcrecode from %s '''  % ('socoding','ods.basic_collection_index')
+ssocialcrecodeFromods = pd.read_sql(sqlCrecode['ods'],conn[0])
+ssocialcrecodeFromodsUniq = ssocialcrecodeFromods.drop_duplicates().rename(columns={'ssocialcrecode':'_u1.ssocialcrecode'})
+ssocialcrecodeFromodsUniq.to_csv(r'/home/kylin/lizhichang/ssocialcrecodeFromodsUniq.csv',encoding='utf-8',index=False)
+# 获取机构全称。
+sqlCrecodeName['ods'] = '''select distinct %s as ssocialcrecode,%s as fullName from %s '''                    % ('socoding','corfull','ods.basic_collection_index')
+crecodeNameFromods = pd.read_sql(sqlCrecodeName['ods'],conn[0])
+crecodeNameFromodsUniq = crecodeNameFromods.drop_duplicates()
+crecodeNameFromodsUniq.to_csv(r'/home/kylin/lizhichang/crecodeNameFromodsUniq.csv',encoding='utf-8',index=False)
+print(ssocialcrecodeFromodsUniq,'\n',crecodeNameFromodsUniq)
+    </code>
+  </pre>
+  <pre>
+    <code class="language-python">
+# 获取产品登记中的社会信用代码、社会信用代码+机构全称
+# Attetion that this database updates overall everyday, partitioned by 'dayid' column.
+sqlCrecode['itf_prre'] = '''select distinct {} as ssocialcrecode from {} where dayid={} union all
+                            select distinct {} as ssocialcrecode from {} where dayid={} union all
+                            select distinct {} as ssocialcrecode from {} where dayid={} union all
+                            select distinct {} as ssocialcrecode from {} where dayid={} union all
+                            select distinct {} as ssocialcrecode from {} where dayid={}'''.\
+    format\
+    ('platform_no','itf_prre.dwd_contract_state','concat(substr(date_add(current_date,-1),1,4),substr(date_add(current_date,-1),6,2),substr(date_add(current_date,-1),9,2))',
+      'platform_no','itf_prre.dwd_general_contract','concat(substr(date_add(current_date,-1),1,4),substr(date_add(current_date,-1),6,2),substr(date_add(current_date,-1),9,2))',
+      'platform_no','itf_prre.dwd_inv_contract','concat(substr(date_add(current_date,-1),1,4),substr(date_add(current_date,-1),6,2),substr(date_add(current_date,-1),9,2))',
+      'platform_no','itf_prre.dwd_inv_return_record','concat(substr(date_add(current_date,-1),1,4),substr(date_add(current_date,-1),6,2),substr(date_add(current_date,-1),9,2))',
+      'platform_no','itf_prre.dwd_pro_repay_record','concat(substr(date_add(current_date,-1),1,4),substr(date_add(current_date,-1),6,2),substr(date_add(current_date,-1),9,2))')
+ssocialcrecodeFromitf_prre = pd.read_sql(sqlCrecode['itf_prre'],conn[0])
+if ssocialcrecodeFromitf_prre.empty:
+ssocialcrecodeFromitf_prreUniq = ssocialcrecodeFromitf_prre.drop_duplicates()
+ssocialcrecodeFromitf_prreUniq.to_csv(r'/home/kylin/lizhichang/ssocialcrecodeFromitf_prreUniq.csv',encoding='utf-8',index=False)
+print(ssocialcrecodeFromitf_prreUniq)
+    </code>
+  </pre>
+  <pre>
+    <code class="python">
+# 获取信息共享的社会信用代码、社会信用代码+机构全称
+sqlCrecode['credi'] = '''select distinct %s as ssocialcrecode from %s where %s= 18 union all
+                        select distinct %s as ssocialcrecode from %s where %s= 18 union all
+                        select distinct %s as ssocialcrecode from %s where %s= 18''' \
+                        % ('sorganation', 'credi.credi_shared_bank_info','length(sorganation)',
+                          'sorganation', 'credi.credi_shared_querycontrol_info','length(sorganation)',
+                          'sorganation', 'credi.credi_shared_org_query_info','length(sorganation)')
+ssocialcrecodeFromcredi = pd.read_sql(sqlCrecode['credi'],conn[0])
+ssocialcrecodeFromcrediUniq = ssocialcrecodeFromcredi.drop_duplicates()
+ssocialcrecodeFromcrediUniq.to_csv(r'/home/kylin/lizhichang/ssocialcrecodeFromcrediUniq.csv',encoding='utf-8',index=False)
+# sorganation has values whose length is 9, which need to be filtered.
+sqlCrecodeName['credi'] = '''select distinct %s as ssocialcrecode, %s as fullName from %s where %s= 18
+                       ''' % ('sorganation','slegalname','credi.credi_shared_bank_info','length(sorganation)')
+crecodeNameFromcredi = pd.read_sql(sqlCrecodeName['credi'],conn[0])
+crecodeNameFromcrediUniq = crecodeNameFromcredi.drop_duplicates()
+crecodeNameFromcrediUniq.to_csv(r'/home/kylin/lizhichang/crecodeNameFromcrediUniq.csv',encoding='utf-8',index=False)
+print(len(crecodeNameFromcrediUniq),len(crecodeNameFromitf_prreUniq))
+    </code>
+  </pre>
+  <pre>
+    <code class="python">
+# concatenate outcomes of hqls above as a whole.
+ssocialcrecodeFromstatsUniq = pd.read_csv(r'/home/kylin/lizhichang/ssocialcrecodeFromstatsUniq.csv')
+ssocialcrecodeFromodsUniq = pd.read_csv(r'/home/kylin/lizhichang/ssocialcrecodeFromodsUniq.csv')
+ssocialcrecodeFromitf_prreUniq = pd.read_csv(r'/home/kylin/lizhichang/ssocialcrecodeFromitf_prreUniq.csv')
+ssocialcrecodeFromcrediUniq = pd.read_csv(r'/home/kylin/lizhichang/ssocialcrecodeFromcrediUniq.csv')
+ssocialcrecodeUltraList = [ssocialcrecodeFromstatsUniq,ssocialcrecodeFromodsUniq,ssocialcrecodeFromitf_prreUniq,ssocialcrecodeFromcrediUniq]
+# Rename columns.
+ssocialcrecodeUniq = pd.concat(ssocialcrecodeUltraList).drop_duplicates().rename(columns={'_u1.ssocialcrecode':'ssocialcrecode'})
+
+crecodeNameFromodsUniq = pd.read_csv(r'/home/kylin/lizhichang/crecodeNameFromodsUniq.csv')
+crecodeNameFromitf_prreUniq = pd.read_csv(r'/home/kylin/lizhichang/crecodeNameFromitf_prreUniq.csv')
+crecodeNameFromcrediUniq = pd.read_csv(r'/home/kylin/lizhichang/crecodeNameFromcrediUniq.csv')
+crecodeNameUltraList = [crecodeNameFromodsUniq,crecodeNameFromitf_prreUniq,crecodeNameFromcrediUniq]
+crecodeNameUniq = pd.concat(crecodeNameUltraList).drop_duplicates()
+
+basicTable = pd.merge(ssocialcrecodeUniq,crecodeNameUniq,how='left',on='ssocialcrecode')
+# Since there are some companies using different names, so the primary key
+# in crecodeNameUniq is (ssocialcrecode,fullname), there may be duplicate ssocialcredcodes, 
+# so when using left join, there may be duplicate ssocialcredcodes in the result, 
+# namely, the primary key of basicTable is also (ssocialcrecode,fullname)。
+print(len(ssocialcrecodeUniq),len(crecodeNameUniq),len(basicTable),'\n',basicTable)
+    </code>
+  </pre>
+  The result would be like:
+  <pre>
+ssocialcrecode                 fullname
+0    91110105745462***F       *****管理（北京）有限公司
+1    91110108098285***3       *****金融信息服务有限公司
+2    91110101306435***4       *****京）信息技术有限公司
+3    91110108078573***E       *****创投电子商务有限公司
+4    91310000320771***D       *****网金融信息服务有限公司
+5    91440300359493***A       *****       NaN
+6    91110105306557***Y       *****财富网络科技有限公司
+7    91110108089606***R       *****普惠信息技术有限公司
+8    91310115332517***6       *****金融信息服务有限公司
+9    91440101304549***G       *****信息服务股份有限公司
+10   91310115301411***2       *****金融信息服务有限公司
+11   91441900MA4ULX***8       *****联网科技服务有限公司
+12   91110108597730***4       *****融信息服务有限责任公司
+13   91440106591537***W       *****投资管理管理有限公司
+14   91440106591537***W       *****惠投资
+15   91440106591537***W       *****惠投资管理有限公司
+...
+  </pre>
+  <h1><a id="link-to-anchor-3">Build up the rule model</a></h1>
+  <pre>
+    <code class="python">
+# 注册时间
+sqlVar['registTime'] = '''
+select socoding as ssocialcrecode,
+	(case 
+		when retime&gt;=20160824 then 1 
+		else 0
+	end) as registTime
+from ods.basic_collection_index
+'''
+registTime = pd.read_sql(sqlVar['registTime'],conn[0])
+registTime.to_csv(r'/home/kylin/lizhichang/registTime.csv',encoding='utf-8',index=False)
+
+# 上线时间
+sqlVar['operaTime'] = '''
+select socoding as ssocialcrecode,
+	(case 
+		when plmontime&gt;=20160824 then 1 
+		else 0
+	end) as operaTime
+from ods.basic_collection_index
+'''
+operaTime = pd.read_sql(sqlVar['operaTime'],conn[0])
+operaTime.to_csv(r'/home/kylin/lizhichang/operaTime.csv',encoding='utf-8',index=False)
+
+# 存管
+sqlVar['fundDeposit'] = '''
+select socoding as ssocialcrecode,
+	(case 
+		when codebank is not null then 0 
+		else 1
+	end) as fundDeposit
+from ods.basic_collection_index
+'''
+fundDeposit = pd.read_sql(sqlVar['fundDeposit'],conn[0])
+fundDeposit.to_csv(r'/home/kylin/lizhichang/fundDeposit.csv',encoding='utf-8',index=False)
+    </code>
+  </pre>
+  <pre>
+    <code class="python">
+# 是债权转让还是其他类型转让
+sqlVar['nonDebtTransferTypeNum'] = '''
+select ssocialcrecode as ssocialcrecode,
+
+            sum
+            (case 
+                when saccounttype='01' then 0
+                else 1
+            end)
+
+     as nonDebtTransferTypeNum
+from stats.nifa_business_jinr
+where 20180801&lt;dtransferdate and dtransferdate&lt;20180831
+group by ssocialcrecode
+'''
+nonDebtTransferTypeNum = pd.read_sql(sqlVar['nonDebtTransferTypeNum'],conn[0])
+nonDebtTransferTypeNum.to_csv(r'/home/kylin/lizhichang/nonDebtTransferTypeNum.csv',encoding='utf-8',index=False)
+    </code>
+  </pre>
+  <pre>
+    <code class="python">
+# 项目转让数量
+sqlVar['transferItemNum'] = '''
+select ssocialcrecode as ssocialcrecode,
+        count(*) as transferItemNum
+from stats.nifa_business_jinr
+where 20180801&lt;dtransferdate and dtransferdate&lt;20180831
+group by ssocialcrecode
+'''
+transferItemNum = pd.read_sql(sqlVar['transferItemNum'],conn[0])
+transferItemNum.to_csv(r'/home/kylin/lizhichang/transferItemNum.csv',encoding='utf-8',index=False)
+print(nonDebtTransferTypeNum,'\n',transferItemNum,'\n',ssocialcrecodeFromstatsUniq)
+
+nonDebtTransferTypeNum = pd.read_csv(r'/home/kylin/lizhichang/nonDebtTransferTypeNum.csv')
+transferItemNum = pd.read_csv(r'/home/kylin/lizhichang/transferItemNum.csv',encoding='utf-8')
+havNonDebtTransferType = pd.DataFrame(nonDebtTransferTypeNum.loc[:,'ssocialcrecode'].copy())
+havNonDebtTransferType['havnondebttransfertype'] = nonDebtTransferTypeNum['nondebttransfertypenum'].apply(lambda x: 1 if x>0 else 0)
+    </code>
+  </pre>
+  After python fetch data, I dump them into csv first, in case they are modified by some unintentional operation and incidence, and use <code>index</code> to keep column name clean. When executing <code class="python">havNonDebtTransferType['havnondebttransfertype'] = nonDebtTransferTypeNum['nondebttransfertypenum'].apply(lambda x: 1 if x>0 else 0)</code> an SettingWithCopyWarning will be thown up, this means I may set the value using a copy of the data and may hove no effect. 
+  <h1><a id="link-to-anchor-4">Chained indexing</a></h1>
+  So how can we prevent this warning? Well actually there's no way once and for all. The pandas 0.22 documentation at 12.22 Returning a view versus a copy, clarify this for us using a multi-index dataframe:
+  <pre>
+In [340]: dfmi
+Out[340]:
+        one         two
+    first second first second
+0     a      b      c     d
+1     e      f      g     h
+2     i      j      k     l
+3     m      n      o     p
+  </pre>
+  It come up with two method to access elements in the dataframe, <code>dfmi['one']['second']</code>, and <code>dfmi.loc[:,('one','second')]</code>, the former is called chained indexing, involving two seperate steps, call <code>__getitem__</code> twice one after the other, while the later make a single call to <code>__getitem__</code>, which can be much faster than chained indexing.
+  Aside from the problem of speed, there's more to consider. It turns out that assigning to the product of chained indexing has inherently unpredictable results. To see this, think about how the Python interpreter executes this code:
+  <pre>
+    <code class="python">
+      dfmi.loc[:,('one','second')] = value
+      # becomes
+      dfmi.loc.__setitem__((slice(None), ('one', 'second')), value)
+      dfmi['one']['second'] = value
+      # becomes
+      dfmi.__getitem__('one').__setitem__('second', value)      
+    </code>
+  </pre>
+  <blockquote>
+  See that __getitem__ in there? Outside of simple cases, it's very hard to predict whether it will return a <span style="background-color: blue;">view or a copy</span> (it depends on the memory layout of the array, about which pandas makes no guarantees), and therefore whether the __setitem__ will modify dfmi or a temporary object that gets thrown out immediately afterward. That's what SettingWithCopy is warning you about.
+  </blockquote>
+  The above means when using chained indexing, the modification may have no effect at all due to the possiblity producing a copy that is disgarded right away.
+  <br>
+  The <code>SettingWithCopyWarning</code> I got might just come from the code block calculating transferItemNum. Remember the quotes above? it's probably classified as chain indexing by interpreter, as it can also be written as <code class="python">pd.DataFrame(nonDebtTransferTypeNum.loc[:,'ssocialcrecode'].copy())['havnondebttransfertype'] = nonDebtTransferTypeNum['nondebttransfertypenum'].apply(lambda x: 1 if x>0 else 0)</code>, which is obviously a chained index whose value is given by <code class="python">nonDebtTransferTypeNum['nondebttransfertypenum'].apply(lambda x: 1 if x>0 else 0)</code>. To surpress the warning, I hard coded <code>copy()</code> trailing the first indexing <code>nonDebtTransferTypeNum.loc[:,'ssocialcrecode']</code>。
+  <br>
+  But SettingWithCopyWarning is not always precise:
+  <blockquote>
+    Warning: The chained assignment warnings &#47; exceptions are aiming to inform the user of a possibly invalid assignment. There may be false positives; situations where a chained assignment is inadvertently reported.
+  </blockquote>
+  One of the author of pandas explained SettingWithCopyWarning generating mechanism at <a href="https://stackoverflow.com/questions/23296282/what-rules-does-pandas-use-to-generate-a-view-vs-a-copy">What rules does Pandas use to generate a view vs a copy?</a>, though not very useful as far as I'm concerned.
+  <h1><a id="link-to-anchor-4">View versus copy &#47; shaallow copy versus deep copy</a></h1>
+  There's another point worth mentioning, that a dataframe constructor <code>pd.DataFrame</code> was added on nonDebtTransferTypeNum.loc[:,'ssocialcrecode'].copy(), it's because that when you access a column, pandas returns a serie(say n elements), when you add a column to this serie, return is a multi row serie(2*n), rather than a multi column dataframe(n*2). Another reason I do this is that it's related to mutable objects reference, which can lead people into pitfalls. 
+  <br>
+  <a href="/files/library content.txt">The Practice of Computing Using Python 7.6 Mutable Objects and References</a> gives us a excellent elaboration. Every operation on an immutable object creates a reference to a new object, but for mutable ones, If two or more variables reference the same object, and through one variable the object is modified (because it is mutable), then all variables that reference that object will reflect that change.
+  <br>
+  <pre>
+    <code class="python">
+a_list = [1,2,3]
+b_list = [5,6,7]
+a_list.append(b_list)
+    </code>
+  </pre>
+  Here there's a reference in a_list pointing to b_list, a change in b_list will reflect in a_list, even if we use list slicing to copy a_list <code>c list = a list[:]</code>, there was a key phrase we used when we talked about using copy slice. We said that it “copies the elements” from one list to the new list. However, as we just saw, sometimes the elements are themselves references. So c_list contains reference to b_list, changes in b_list will still show up in c_list. The case in which only the references, not the objects themselves, are copied is called a <span style="background-color: darkorange;"><b>shallow copy</b></span>.It copies the elements in a list, even if the elements are references. If what you desire is to copy the   contents rather than simply the reference, you need to perform what is called a <span style="background-color: darkorange;"><b>deep copy</b></span>. A deep copy will copy any object, even it if means it must follow a reference to find the object. Such a copy could be very slow if there are many references, but it will provide a true copy of the object. To achieve deep copy, you can use <code>copy</code> module, or DataFrame method <code>copy(deep=True)</code>. But when it comes to recursive copy, these two mothods have some difference that the standard library <code>copy.deepcopy</code> performs truly "deep copy", for details see <a href="https://pandas.pydata.org/pandas-docs/version/1.3/reference/api/pandas.DataFrame.copy.html#pandas.DataFrame.copy">pandas 1.3 ducumentation</a>. If you are interested in numpy implementation on view and copy, see <a href="/files/library content.txt">numpy 1.14.0 user guide 2.4 Copies and Views</a>.
+  <br>
+  The codes concerning <code>sqlVar['repayGuarantRiskFundItemNum'], sqlVar['itemNum'], sqlVar['nonRepayGuarant3rdPartyGuarantItemNum'], sqlVar['totalFeeMoreThan36ItemNum'], sqlVar['totalFeeMoreThan24ItemNum']</code> is omitted for nothing special but plain SQLs.
+
+  
+  <script src="/assets/js/prism.js"></script>
+</body>
