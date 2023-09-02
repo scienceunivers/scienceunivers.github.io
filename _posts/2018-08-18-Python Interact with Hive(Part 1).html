@@ -99,7 +99,7 @@ Sometime jupyter will throw up following error:
 which mean there need to reconnect the database, possibly for session time out, or part of the partitions of tables are updating. Just re-execute the connection and cursor part of the above code.
 <h1><a id="link-to-anchor-2">Generate basicTable(unified social credit code and company name)</a></h1>
   <pre>
-    <code class="python">
+    <code class="language-python">
 # 获取社会信用代码。
 sqlCrecode['stats'] = '''select distinct %s as ssocialcrecode from %s union all
                         select distinct %s as ssocialcrecode from %s '''\
@@ -152,7 +152,7 @@ print(ssocialcrecodeFromitf_prreUniq)
     </code>
   </pre>
   <pre>
-    <code class="python">
+    <code class="language-python">
 # 获取信息共享的社会信用代码、社会信用代码+机构全称
 sqlCrecode['credi'] = '''select distinct %s as ssocialcrecode from %s where %s= 18 union all
                         select distinct %s as ssocialcrecode from %s where %s= 18 union all
@@ -173,7 +173,7 @@ print(len(crecodeNameFromcrediUniq),len(crecodeNameFromitf_prreUniq))
     </code>
   </pre>
   <pre>
-    <code class="python">
+    <code class="language-python">
 # concatenate outcomes of hqls above as a whole.
 ssocialcrecodeFromstatsUniq = pd.read_csv(r'/home/kylin/lizhichang/ssocialcrecodeFromstatsUniq.csv')
 ssocialcrecodeFromodsUniq = pd.read_csv(r'/home/kylin/lizhichang/ssocialcrecodeFromodsUniq.csv')
@@ -220,7 +220,7 @@ ssocialcrecode                 fullname
   </pre>
   <h1><a id="link-to-anchor-3">Build up the rule model</a></h1>
   <pre>
-    <code class="python">
+    <code class="language-python">
 # 注册时间
 sqlVar['registTime'] = '''
 select socoding as ssocialcrecode,
@@ -259,7 +259,7 @@ fundDeposit.to_csv(r'/home/kylin/lizhichang/fundDeposit.csv',encoding='utf-8',in
     </code>
   </pre>
   <pre>
-    <code class="python">
+    <code class="language-python">
 # 是债权转让还是其他类型转让
 sqlVar['nonDebtTransferTypeNum'] = '''
 select ssocialcrecode as ssocialcrecode,
@@ -280,7 +280,7 @@ nonDebtTransferTypeNum.to_csv(r'/home/kylin/lizhichang/nonDebtTransferTypeNum.cs
     </code>
   </pre>
   <pre>
-    <code class="python">
+    <code class="language-python">
 # 项目转让数量
 sqlVar['transferItemNum'] = '''
 select ssocialcrecode as ssocialcrecode,
@@ -299,7 +299,7 @@ havNonDebtTransferType = pd.DataFrame(nonDebtTransferTypeNum.loc[:,'ssocialcreco
 havNonDebtTransferType['havnondebttransfertype'] = nonDebtTransferTypeNum['nondebttransfertypenum'].apply(lambda x: 1 if x>0 else 0)
     </code>
   </pre>
-  After python fetch data, I dump them into csv first, in case they are modified by some unintentional operation and incidence, and use <code>index</code> to keep column name clean. When executing <code class="python">havNonDebtTransferType['havnondebttransfertype'] = nonDebtTransferTypeNum['nondebttransfertypenum'].apply(lambda x: 1 if x>0 else 0)</code> an SettingWithCopyWarning will be thown up, this means I may set the value using a copy of the data and may hove no effect. 
+  After python fetch data, I dump them into csv first, in case they are modified by some unintentional operation and incidence, and use <code>index</code> to keep column name clean. When executing <code class="language-python">havNonDebtTransferType['havnondebttransfertype'] = nonDebtTransferTypeNum['nondebttransfertypenum'].apply(lambda x: 1 if x>0 else 0)</code> an SettingWithCopyWarning will be thown up, this means I may set the value using a copy of the data and may hove no effect. 
   <h1><a id="link-to-anchor-4">Chained indexing</a></h1>
   So how can we prevent this warning? Well actually there's no way once and for all. The pandas 0.22 documentation at 12.22 Returning a view versus a copy, clarify this for us using a multi-index dataframe:
   <pre>
@@ -315,7 +315,7 @@ Out[340]:
   It come up with two method to access elements in the dataframe, <code>dfmi['one']['second']</code>, and <code>dfmi.loc[:,('one','second')]</code>, the former is called chained indexing, involving two seperate steps, call <code>__getitem__</code> twice one after the other, while the later make a single call to <code>__getitem__</code>, which can be much faster than chained indexing.
   Aside from the problem of speed, there's more to consider. It turns out that assigning to the product of chained indexing has inherently unpredictable results. To see this, think about how the Python interpreter executes this code:
   <pre>
-    <code class="python">
+    <code class="language-python">
       dfmi.loc[:,('one','second')] = value
       # becomes
       dfmi.loc.__setitem__((slice(None), ('one', 'second')), value)
@@ -329,7 +329,7 @@ Out[340]:
   </blockquote>
   The above means when using chained indexing, the modification may have no effect at all due to the possiblity producing a copy that is disgarded right away.
   <br>
-  The <code>SettingWithCopyWarning</code> I got might just come from the code block calculating transferItemNum. Remember the quotes above? it's probably classified as chain indexing by interpreter, as it can also be written as <code class="python">pd.DataFrame(nonDebtTransferTypeNum.loc[:,'ssocialcrecode'].copy())['havnondebttransfertype'] = nonDebtTransferTypeNum['nondebttransfertypenum'].apply(lambda x: 1 if x>0 else 0)</code>, which is obviously a chained index whose value is given by <code class="python">nonDebtTransferTypeNum['nondebttransfertypenum'].apply(lambda x: 1 if x>0 else 0)</code>. To surpress the warning, I hard coded <code>copy()</code> trailing the first indexing <code>nonDebtTransferTypeNum.loc[:,'ssocialcrecode']</code>。
+  The <code>SettingWithCopyWarning</code> I got might just come from the code block calculating transferItemNum. Remember the quotes above? it's probably classified as chain indexing by interpreter, as it can also be written as <code class="language-python">pd.DataFrame(nonDebtTransferTypeNum.loc[:,'ssocialcrecode'].copy())['havnondebttransfertype'] = nonDebtTransferTypeNum['nondebttransfertypenum'].apply(lambda x: 1 if x>0 else 0)</code>, which is obviously a chained index whose value is given by <code class="language-python">nonDebtTransferTypeNum['nondebttransfertypenum'].apply(lambda x: 1 if x>0 else 0)</code>. To surpress the warning, I hard coded <code>copy()</code> trailing the first indexing <code>nonDebtTransferTypeNum.loc[:,'ssocialcrecode']</code>。
   <br>
   But SettingWithCopyWarning is not always precise:
   <blockquote>
@@ -342,7 +342,7 @@ Out[340]:
   <a href="/files/library content.txt">The Practice of Computing Using Python 7.6 Mutable Objects and References</a> gives us a excellent elaboration. Every operation on an immutable object creates a reference to a new object, but for mutable ones, If two or more variables reference the same object, and through one variable the object is modified (because it is mutable), then all variables that reference that object will reflect that change.
   <br>
   <pre>
-    <code class="python">
+    <code class="language-python">
 a_list = [1,2,3]
 b_list = [5,6,7]
 a_list.append(b_list)
