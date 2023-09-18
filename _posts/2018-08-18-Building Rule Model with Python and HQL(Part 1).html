@@ -50,9 +50,9 @@ tags:
   <hr>
   Since the second half of 2018, I was involved in a P2P risk alert system building project, in charge of the risk rule part. In this serie, I will mark some interesting problems and their solutions along this mission. First we went through all the policies concerning P2P regulation, extract those that can be measured by numbers and decisions, then turn these rules from the policies into codes. 
   <br>
-  To present company's risk, a natural thought is create a table, one column is company name or unique identifier like unified social credit code, another column should be the risk score of asssociated company. Additional columns may be appended.
+  To present company's risk, a natural thought is to create a table, one column is company name or unique identifier like unified social credit code, another column should be the risk score of asssociated company. Additional columns may be appended.
   <br>
-  To get the identifier, one efficient way is to connect the database, extract them from data stored till now. The data at hand is store in server clusters, specifically, on hive or hdfs. For the sake of data safety, we are not allowed to access them by terminal or Xshell, colleages from develop department set up vpn for us based on jupyterhub, so we can manipulate data from jupyter notebook using python via vpn, eventually get to raw data on hive.
+  To get the identifier, one efficient way is to connect the database, extract them from data stored till now. The data at hand is stored in server clusters, specifically, on hive or hdfs. For the sake of data safety, we are not allowed to access them by terminal or Xshell, colleages from develop department set up vpn for us based on jupyterhub, so we can manipulate data from jupyter notebook using python via vpn, eventually get to raw data on hive.
   <h1><a id="link-to-anchor-1">Set up the connection and variables</a></h1>
   <pre>
     <code class="language-python">
