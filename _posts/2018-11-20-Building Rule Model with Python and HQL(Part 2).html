@@ -1,0 +1,304 @@
+---
+type: posts
+layout: single
+classes: wide
+title: "Building Rule Model with Python and HQL(Part 2)"
+tags:
+- python
+- Hive
+- SQL statements
+- pandas
+- regular expression
+- query
+- funciton
+- procedure
+- trigger
+- subquery
+- recursive query
+- Byte order Mark
+- utf-8-sig
+---
+
+<head>
+  <!--  
+  <style>
+  code {
+  color: white;
+  background-color: black;
+  padding: 0;
+  }
+  pre {
+  color: white;
+  background-color: black;
+  padding: 0px;
+  margin: 0px;
+  }
+  </style>
+  
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  -->
+  <!--上面css和js目的是html中高亮各种语言，高亮效果不好。-->
+  <link href="/assets/css/prism.css" rel="stylesheet" />
+</head>
+
+<body>
+  <nav class="toc" aria-labelledby="toc-label">
+    <h2 id="toc-label">Contents</h2>
+    <ul class="clean-list">
+      <li><a href="#link-to-anchor-1">jupyter xsrf argument missing from post</a></li>
+      <li><a href="#link-to-anchor-2">Regular expression —— essentials</li>
+      <li><a href="#link-to-anchor-3">SQL essentials</a></li>
+      <li><a href="#link-to-anchor-4">utf8, BOM, utf8_sig</a></li>
+
+    </ul>
+  </nav>
+  <!--
+  P2P风险预警系统的SQL。通过VPN链接数据库，获取数据，进行运算，用python辅助。part2主要想写一下regEx体系、SQL体系的入门框架。  -->
+  <hr>
+  <h1><a id="link-to-anchor-1">jupyter xsrf argument missing from post</a></h1>
+  When a jupyter notebook has been opened for quite a while, say a couple of weeks, the notebook may stop autosaving
+  warning <code class="language=python">jupyter xsrf argument missing from post</code>, and <button>save and
+    checkpoint</button> doesn't work either. For my case, just press <button>F5</button>, functions relating to saving
+  will come back again.
+  <h1><a id="link-to-anchor-2">Regular expression —— essentials</a></h1>
+  When things comes to replacing large number of specific characters or looking up some character in a very long piece
+  of codes, it's the time that regular expression jumps into rescue. In the former posts, you could see once I applied
+  regular expressions conbined with python, e.g.
+  <pre>
+    <code class="language-python">
+regEx = re.compile(r'^[0-9]{5,5}$')
+for i in range(len(cleanColumn)):
+    if regEx.match(str(cleanColumn[i])) is None:
+        raise Exception('Wrong pattern in non-NA and non-nan effective values in {} at index {}'.format(colNames[1], i))
+    </code>
+  </pre>
+  Here I'm not going to introduce grammar of regular syntax because there are already millions of articles or books
+  doing this job with completeness. Rather, I'll discuss some of the experience and lessons I've learned while I'm
+  getting along with it. Comments are welcomed.
+  <h2><a id="link-to-anchor-1.1">Regular expression tools</a></h2>
+  Regular expressions are available in many types of tools (editors, word processors, system tools, database engines, and such), but their power is most fully exposed when available as part of a programming language. 
+  <br>
+  Finding text is one of the simplest uses of regular expressions, many text editors and word processors allow you to search a document using a regular-expression pattern. Even simpler is the utility family of grep. 
+  <br>
+  grep or Global Regular Expression Print is the main search program on Unix-like systems which can search for strings on any files or output of any command. It uses Basic Regular Expressions apart from normal strings as a search pattern. In Basic Regular Expressions (BRE), meta-characters like: '{','}','(',')','|','+','?' are treated as normal characters of string and need to be escaped if they are to be treated as special characters. This is contrary to regular expressions used in programming laguages like python, whose meta characters needs to be escaped to be seen as normal stirng.
+  <br>
+  Egrep or grep -E is another version of grep or the Extended grep. This version of grep treats meta-characters as is and doesn't substitute them as strings like in grep, and hence you are freed from the burden of escaping them as in grep. It uses ERE or the Extended Regular Expression set. It is available in windows.
+  Fgrep or the Fixed grep or grep -F is yet another version of grep which is suitable in searching when it comes to search for the entire string instead of regular expression as it doesn't recognize the regular expressions, neither any meta-characters. For searching any direct string, this is the version of grep which should be selected.
+  <h2><a id="link-to-anchor-1.2">Good habits - thinking it literally</a></h2>
+  Here's an classic example. <a id="1" href="#note-1">1</a></b>
+  <code class="language-bash">egrep q[^u] word.list</code>
+  <pre>
+  Iraqi
+  Iraqian
+  miqra
+  qasida
+  qintar
+  qoph
+  zaqqum%
+  </pre>
+  Two notable words not listed are “Qantas”, the Australian airline, and “Iraq”. Although both words are in the word.list file, neither were displayed by my egrep command. Remember, a negated character class means “match a character that's not listed” and not “don't match what is listed.” These might seem the same, but the Iraq example shows the subtle difference. A convenient way to view a negated class is that it is simply a shorthand for a normal class that includes all possible characters except those that are listed.
+  <br>
+  It's best to get into the habit of interpreting regular expressions in a rather literal way. For example, don't think
+  ^cat matches a line with cat at the beginning, but rather:^cat matches if you have the beginning of a line, followed immediately by c, followed immediately by a, followed immediately by t. They both end up meaning the same thing, but reading it the more literal way
+  allows you to intrinsically understand a new expression when you see it.
+  <h2><a id="link-to-anchor-1.3">Pitfalls - words</a></h2>
+  You can use \&lt;, \&gt; to match starts and ends of words. It benifits to work on definition of words for new comers. In notepad++ regular expression documentation, it mentioned <a href="https://www.scintilla.org/ScintillaDoc.html#Words">Scintilla's definition of words</a>: 
+  <blockquote>
+  Words are contiguous sequences of characters from a particular set of characters. 4 categories define words: word, whitespace, punctuation, and line ends with each category having a role in word functions. Double clicking selects the word at that point, which may be a sequence of word, punctuation, or whitespace bytes. Line ends are not selected by double clicking but do act as word separators.
+  </blockquote>
+  That is words can be seperated by whitespaces, punctuations, lineends. So "doesn't", it's two words.
+  <h2><a id="link-to-anchor-1.4">Good habits - practice and document</a></h2>
+  Mastering a language, no matter it is linguistic or programming related, needs plenty of practice, so is taking grasp of regular expression. I usually keep cases I encounter down on some document so that I can accumulate my experience using this tool, gain more and more insights on the mechanism of it. Every time I solve a problem using regular expression, I will keep down all the questions popping up to me and my research on these questions, very helpful when referencing them later on.
+  <h2><a id="link-to-anchor-1.5">Pitfalls - metacharacters, it is or not?</a></h2>
+  Suppose we have a regular expression like [0-9A-ZR!.?]. Note that a dash is a metacharacter only within a character class — otherwise it matches the normal dash character. In fact, it is not even always a metacharacter within a character class. If it is the first character listed in the class, it can't possibly indicate a range, so it is not considered a metacharacter. Along the same lines, the question mark and period at the end of the class are not interpreted as metacharacters, they are usually regular-expression metacharacters, but only when not within a class (so, the only special characters within the class in [0-9A-ZR!.?] are the two dashes).
+  <br>
+  Another example is ^, ^ is a line anchor outside a class, but a class metacharacter inside a class (but, only when it is immediately after the class's opening bracket; otherwise, it's not special inside a class). Alike things also happen on "dot", "or".
+  <h2><a id="link-to-anchor-1.6">Good habits - keep a book aside</a></h2>
+  Traditionally, regular expression documentation tends to be limited to a short and incomplete description of one or two metacharacters, followed by a table of the rest. Examples often use meaningless regular expressions like <code>a+((ab)+;b+)</code>. They also tend to completely ignore subtle but important points, and often claim that their flavor is the same as some other well-known tool, almost always forgetting to mention the exceptions where they inevitably differ. The state of regex documentation needs help, and there may be times when superficial rules in regex documentation and resources on the internet are not enough to cover problems you run into in reality, this is when you should turn to a systematic book.
+  <br>
+  When you starts going through a book aiming to build a systematic foundation, it is good because you will learn peculiarities to watch out for when faced with regex with a different flavor. You will be able to balance tradeoffs among complexity, efficiency, and match results. When faced with a particularly complex task, you will know how to work through an expression the way the program would, constructing it as you go. The problem is that the learning curve can be rather steep. Because most programs use regular expressions in ways that are more complex than egrep. Selecting the proper tool to use seems to be half the battle, different programs provide different features and metacharacters. We must survey the field before getting into the details of using them. We need to “look under the hood” to understand how a regular expression search is conducted. Understanding how the regex engine works is the key to really understanding.
+  <h1><a id="link-to-anchor-3">SQL essentials</a></h1>
+  In the progress of completing this rule model, I wrote some other variables with respective SQL/HQLs, a bit complexer than in <i>Building Rule Model with Python and HQL(Part 1)</i>. Like:
+  <pre>
+    <code class="language-python">
+# 在单个平台借款超过20万的人数，在单个平台借款超过100万的人数
+# smembertype_bor借款人类型，01自然人 02法人
+# scertno_bor借款人证件号，包括个人证件、机构代码
+# iblanace借款剩余本金余额。sumiblanace group by a.ssocialcrecode,b.smembertype_bor,b.scertno_bor，就是在单个平台上的借款额。
+# 执行时间4min。
+start = time.time()
+sqlVar['over20and100SingleEntityNum'] = '''
+select tmp.ssocialcrecode as ssocialcrecode,
+        count(distinct case when smembertype_bor='01' and sumiblanace>200000 then scertno_bor else null end ) as overnum20,
+        count(distinct case when smembertype_bor='02' and sumiblanace>1000000 then scertno_bor else null end ) as overnum100     
+from (
+      select a.ssocialcrecode,b.smembertype_bor,b.scertno_bor,sum(a.iblanace) as sumiblanace,a.ddate
+        from stats.nifa_business_zhaiq as  a
+      left join stats.nifa_business_zhaiq_bor as b 
+      on a.stheonlyid=b.stheonlyid
+      group by a.ssocialcrecode,b.smembertype_bor,b.scertno_bor
+      ) as tmp
+where tmp.ddate>20160824
+group by tmp.ssocialcrecode'''
+over20and100SingleEntityNum = pd.read_sql(sqlVar['over20and100SingleEntityNum'],conn[0])
+end = time.time()
+print(end-start)
+over20and100SingleEntityNum.to_csv(r'/home/kylin/lizhichang/checkingResults/20181201/after20160824/over20and100SingleEntityNum.csv',encoding='utf-8',index=False) 
+    </code>
+  </pre>
+  Here I'd like to share some experience in learning SQL. My principle is to let one get to use SQL to do some specific job asap. <b><i>Most of the textbooks likes introducing DBMS, various data models(the prevailing ones today are relational) at first, which doesn't matter if you don't aim to dig into database theory, just skip to SQL statement part.</i></b>
+  <h2><a id="link-to-anchor-3.1">Syntax of SQL syntax</a></h2>
+  When you create an SQL statement, you often rely on the statement syntax defined in a product's documentation. The syntax provides the guidelines to create a statement that RDBMS can interpret. When you first look at the complete syntax for any statement, it might seem overwhelming, depending on the statement. For some statements, there are relatively few elements. The elements comprising a syntactic structure can vary from reference to reference and from productto product.
+  <br>
+  The syntax method employed here is referred to as BNF (Backus Naur Form) notation. Most resources that discuss syntax for SQL statements use BNF notation or something similar to this. There are many resources on the interpretation on BNF, you can google for them. The most common symbols are Vertical bar, Square brackets, Angle brackets, Curly brackets, Three periods, Two colons/equal sign. <b><i style="color: orange;">Once you understand how to use these six symbols, you should be able to interpret most syntax. Once you know how to interpret syntax presented in various SQL documents, you can quickly make yourself full of SQL statement expertise.</i></b>
+  <h2><a id="link-to-anchor-3.2">Types of SQL statements</a></h2>
+  SQL is generally broken down into three categories of statements: data definition language (DDL), data manipulation language (DML), and data control language (DCL). 
+  <br>
+  DDL statements create, alter, and delete data structures within the database. DDL statements define the structure of a database and determine the type of data that can be stored in the database and how to store that data. Specifically, DDL statements allow you to do the following: Create and remove databases (the CREATE DATABASE and DROP DATABASE statements); Create, alter, rename, and remove tables (the CREATE TABLE, ALTER TABLE, RENAME TABLE, and DROP TABLE statements); Create and remove indexes (the CREATE INDEX and DROP INDEX statements).
+  <br>
+  DML statements are more concerned with the data stored in the database than the database structure itself. For example, you can use DDL statements to request information from the database as well as insert, update, and delete data; however, you would not use a DML statement to create or modify the tables that hold the data. Specifically, DML statements allow you to do the following: Query a database for specific types of information from one or more tables (the SELECT statement); Insert data into a table (the INSERT, REPLACE, and LOAD DATA INFILE statements); Update existing data in a table (the INSERT and REPLACE statements); Delete data from a table (the DELETE FROM and TRUNCATE TABLE statements).
+  <br>
+  DCL statements represent yet another function supported by SQL statements: controlling access to a database. Specifically, DCL statements allow you to do the following: Grant access privileges to users (the GRANT statement); Revoke access privileges to users (the REVOKE tatement).
+  <br>
+  <b><i style="color: orange;">Most books may dedicate large space on designing a relational database, normal forms, relation mappings, which I think have little impact on practice, advices on them is skipping unless you want to dive into theory. The relational algebra part, is worth a glimpse, as it is related to SQL statements closely, helping you understand SQL statements in depth. Once you have a basic understanding of the basic grammar of main kinds of SQL, it's time to move into more specific keywords or functionality or deeper structure of databases.</i></b>
+  <h2><a id="link-to-anchor-3.3">Types of execution</a></h2>
+  The SQL:2003 standard defines four methods for executing an SQL statement: direct invocation, module binding, embedded SQL, and call-level interface (CLI). However, not all RDBMS products support all four types of execution. Module binding is a type of statement execution in which modules made up of SQL statements are called from within a host programming language. As the name suggests, embedded SQL refers to SQL statements that are embedded directly within the programming language to allow that language to access and modify data within an SQL database. A call-level interface is essentially an API that allows a programming language to communicate directly with an SQL database. 
+  <h2><a id="link-to-anchor-3.3">Understanding the Directory Structure</a></h2>
+  When you install a database, say MySQL, a directory structure is set up to support the various database-related functions. The directories contain the files necessary to initialize the database, start the MySQL server, and set up the server to run automatically. In addition, the directories include the server-related and client programs included with MySQL, as well as script, log, and document files related to the MySQL operation. It's very useful to have a grasp of the content of certain folders, making the way of debugging more clear, e.g. /usr/share/man/man1, /usr/share/mysql, /var/lib/mysql, /usr/local/mysql/data, C:\Program Files\MySQL\MySQL Server &lt;version&gt;\data. 
+  <br>
+  It helps to know some file types and their features, like .frm, .MYD, .MYI. And there're some important database created by default, the mysql database, is an administrative database that contains tables related to securing the MySQL installation, storing user-defined functions, and providing data related to the MySQL help system and to timezone functionality. By default, the mysql database includes 15 tables. The following table provides a brief description of the data included in each table. Grant tables is tables in the mysql database that are used to control access to MySQL and the MySQL databases.
+  <h2><a id="link-to-anchor-3.4">Programs in RDBMS</a></h2>
+  MySQL includes programs that are related to running the MySQL server or that are client tools used to interact with the server. For all the MySQL programs, you can specify a variety of options that affect how that program runs and the context in which it operates, like: <code class="language-sql">mysql test -u root -p</code>. Some of the critical programs of MySQL are mysqld, mysql, mysqladmin, mysqlbinlog, mysqldump, etc.
+  <br>
+  One of the most useful programs included with MySQL is the mysql client utility that you use at a command prompt. The mysql utility allows you to perform a number of administrative tasks and to interact directly with the data stored in MySQL. You can use the mysql utility in interactive mode and in batch mode.
+  <br>
+  The mysql client utility also allows you to execute commands that are specific to the mysql client utility. These commands are useful for performing such tasks as clearing your entry from the command prompt, exiting the mysql utility, and switching databases. All mysql commands include a long form and a short form. For example, you can also write the prompt command as the \R command. You should note, however, that the short form is case sensitive. For instance, the \R command is the short form of the prompt command, but the \r command is the short form of the connect command. The source (\.) command executes a query that is in a specified file. For example, suppose you have a file named user_info.sql that contains a SELECT statement. The tee (\T) command is very useful if you want to keep a record of the commands that you type and the data that is returned by executing those commands. 
+  <h2><a id="link-to-anchor-3.5">Functions, procedures, triggers</a></h2>
+  Each function performs a specific task and then returns a value from the performance of that task. These tasks can include calculating numeric data, manipulating string data, returning system data, converting and extracting data, and performing numerous other operations. Typical commonly used functions include comparison functions like GREATEST(), LEAST(), COALESCE(), ISNULL(), MAX(), INTERVAL(); control flow functions like IF(); type functions like CAST(); string functions like ASCII(), LENGTH(), CONCAT(), CONCAT_WS(), LOCATE(), LOWER(), UPPER(), LEFT(), REPEAT(), REVERSE(), SUBSTRING(); character set functions like CHARSET(), COLLATION(); numeric functions like CEILING(), FLOOR(), SQRT() AND POW(); date and time funtions like ADDDATE(), CURDATE(), CURRENT_TIMESTAMP(), TIMESTAMP(); search functions like MATCH AGAINST... the more you tackle with specific query tasks, the more familiar you will be with these funcitions, and even you can write your own user defined functions like below:
+  <pre>
+    <code class="language-sql">
+create function dept_count(dept_name varchar(20))
+  returns integer
+  begin
+  declare d_count integer;
+    select count(*) into d_count
+    from instructor
+    where instructor.dept_name= dept_name
+  return d_count;
+  end
+    </code>
+  </pre>
+  The SQL standard supports functions that can return tables as results; such functions are called table functions:
+  <pre>
+    <code class="language-sql">
+create function instructor_of (dept_name varchar(20))
+  returns table (
+    ID varchar (5),
+    name varchar (20),
+    dept_name varchar (20),
+    salary numeric (8,2)
+    )
+return table
+(select ID, name, dept_name, salary
+from instructor
+where instructor.dept_name = instructor of.dept_name);
+    </code>
+  </pre>
+  There's a widely applied function called RANK(), usually used with OVER (ORDER BY COLUMN_NAME). Window queries compute an aggregate function over ranges of tuples. This is useful, for example, to compute an aggregate of a fixed range of time; the time range is called a window, the correspongding function is AVG() OVER (ORDER BY COLUMN_NAME NUMBER_OF_ROWS_PRECEDING).
+  Procedures and functions allow “business logic” to be stored in the database and executed from SQL statements. The functions above can be rewritten as procedures as well. Triggers can be used to implement certain integrity constraints that cannot be specified using the constraint mechanism of SQL. Triggers are also useful mechanisms for alerting humans or for starting certain tasks automatically when certain conditions are met. Inside a function, procedure, trigger, you may encounter keywords resembling some programming languages like <b>for, while, loop, until, repeat, if, else, then, etc.</b>
+  <h2><a id="link-to-anchor-3.6">Complex query</a></h2>
+  In most industrial application, there's solid needs for queries like joining multiple tables, subqueries, which I think should be payed more attention than built-in functions. Before you work yoursefl through these queries, you'd better figure out the meaning of various joins, like INNER JOIN, CROSS JOIN, STRAIGHT JOIN, LEFT/RIGHT JOIN, NATURAL JOIN. Different way fo join result in different complexity and executing speed, and may influence optimization schema of SQL engine.
+  There is a kind of subquery worth pointing out:
+  <pre>
+    <code class="languange-sql">
+select course id
+from section as S
+where semester = 'Fall' and year= 2017 and
+exists 
+(
+  select *
+  from section as T
+  where semester = 'Spring' and year= 2018 and
+  S.course id= T.course id
+);
+    </code>
+  </pre>
+  The above query also illustrates a feature of SQL where a correlation name from an outer query (S in the above query), can be used in a subquery in the where clause. A subquery that uses a correlation name from an outer query is called a correlated subquery.
+  The with clause provides a way of defining a temporary relation whose definition is available only to the query in which the with clause occurs. Consider the following query, which finds those departments with the maximum budget. <code class="language-sql">with</code> defines a temperary table that doesn't occupy hard drive space.
+  <pre>
+    <code class="language-sql">
+with max_budget (value) as
+(select max(budget)
+from department)
+select budget
+from department, max budget
+where department.budget = max budget.value;
+    </code>
+  </pre>
+  Subqueies can exist in where clause, from clause, operators, etc.
+  <br>
+  Another subtle query is recursive query, this kind of query is abstract without an example, so here I recommend reading <i>Database system concepts 7th</i> by Abraham Silberschatz<a id="2" href="#note-2">2</a></b>, Henry Korth and S. Sudarshan for more information. It can be thought as a SQL version of recursive function in a programming language. For example:
+  <pre>
+    <code class="language-sql">
+with recursive rec_prereq(course_id, prereq_id) as 
+(
+  select course_id, prereq_id
+  from prereq
+  union
+  select rec_prereq.course_id, prereq.prereq_id
+  from rec_prereq, prereq
+  where rec_prereq.prereq_id = prereq.course_id
+)
+select *
+from rec_prereq;
+    </code>
+  </pre>
+  The SQL standard supports using the with recursive clause, where a view (or temporary view) is expressed in terms of itself. <b><i style="color:orange">Any recursive view must be defined as the union of two subqueries: a base query that is nonrecursive and a recursive query that uses the recursive view. In the example above, the base query is the select on prereq while the recursive query computes the join of prereq and rec_prereq. </i><i style="color: violet;">The meaning of a recursive view is best understood as: First compute the base query and add all the resultant tuples to the recursive view rec_prereq (which is initially empty but filled with course_id, prereq_id from prereq after executing the base query). Next compute the recursive query using the current contents of the view, and add all the resulting tuples back to the view(that is selecting prereq_id according to course_id in rec_prereq in the prereq table). Keep repeating the above step until no new tuples are added to the view relation.</i></b> The resultant view relation instance is called a fixed point of the recursive view definition. (The term “fixed” refers to the fact that there is no further change.) The view relation is thus defined to contain exactly the tuples in the fixed-point instance.
+  <h2><a id="link-to-anchor-3.7">Views</a></h2>
+  SQL allows a “virtual relation” to be defined by a query, and the relation conceptually contains the result of the query. The virtual relation is not precomputed and stored but instead is computed by executing the query whenever the virtual relation is used. We saw a feature where we described the with clause. The with clause allows us to to assign a name to a subquery for use as often as desired, but in one particular query only. It is possible to support a large number of views on top of any given set of actual relations. The form of the
+  create view command is: <code class="language-sql">create view v as &lt;query expression&gt;;</code>.
+  Certain database systems allow view relations to be stored, but they make sure that, if the actual relations used in the view definition change, the view is kept up-to-date. Such views are called materialized views.
+  <h2><a id="link-to-anchor-3.8">Transactions</a></h2>
+  In the context of SQL and relational databases, a transaction is a set of one or more SQL statements that perform a set of related actions. The statements are grouped together and treated as a single unit whose success or failure depends on the successful execution of each statement in the transaction. 
+  The SQL:1999 standard is to allow multiple SQL statements to be enclosed between the keywords <b>begin atomic … end</b>. All the statements between the keywords then form a single transaction, which is committed by default if execution reaches the <b>end</b> statement. Only some databases, such as SQL Server, support the above syntax. However, several other databases, such as MySQL and PostgreSQL, support a <b>begin</b> statement which starts a transaction containing all subsequent SQL statements, but do not support the <b>end</b> statement; instead, the transaction must be ended by either a <b>commit work</b> or a <b>rollback work</b> command.
+  There might be times, when you want to lock other types of tables that are included in your database. By locking nontransactional tables manually, you can group SQL statements together and set up a transaction-like operation in order to prevent anyone from changing the tables that participate in your operation. To lock a nontransactional table, you must use the <code class="language-ql">LOCK TABLES</code> statement. Once you've completed updating the tables, you should use the <code class=language-sql">UNLOCK TABLES</code> statement to release them. 
+  <h1><a id="link-to-anchor-4">utf8, BOM, utf8_sig</a></h1>
+  At the end of my script, I transfer DataFrame to csv using:
+  <pre>
+    <code class="language-python">
+middleTable.to_csv(r'/home/kylin/lizhichang/checkingResults/20181201/after20160824/middleTable.csv',encoding='utf_8',index=False)
+    </code>
+  </pre>
+  then open this csv in Excel, only to see all the messy. Solution: change encoding to 'utf_8_sig'. The reason there's messy characters is about with or without BOM. BOM stands for Byte Order Mark. A BOM-ed UTF-8 string will start with the three following bytes: EF BB BF. But why need BOM? Python documentation gives us an explanation.
+  <blockquote>
+  Unicode strings are stored internally as sequences of code points. Depending on the way Python is compiled Py_UNICODE is either a 16-bit or 32-bit data type. Once a Unicode object is used outside of CPU and memory, CPU endianness and how these arrays are stored as bytes become an issue. Transforming a unicode object into a sequence of bytes is called encoding and recreating the unicode object from the sequence of bytes is known as decoding. There are many different methods for how this transformation can be done (these methods are also called encodings). The simplest method is to map the code points 0-255 to the bytes 0x0-0xff. This means that a unicode object that contains code points above U+00FF can't be encoded with this method (which is called 'latin-1' or 'iso-8859-1'). unicode.encode() will raise a UnicodeEncodeError that looks like this: UnicodeEncodeError: 'latin-1' codec can't encode character u'\u1234' in position 3: ordinal not in range(256). 
+  There's another group of encodings (the so called charmap encodings) that choose a different subset of all unicode code points and how these code points are mapped to the bytes 0x0-0xff.
+  All of these encodings can only encode 256 of the 1114112 code points defined in unicode. A simple and straightforward way that can store each Unicode code point, is to store each code point as four consecutive bytes. There are two possibilities: store the bytes in big endian or in little endian order. These two encodings are called UTF-32-BE and UTF-32-LE respectively. Their disadvantage is that if e.g. you use UTF-32-BE on a little endian machine you will always have to swap bytes on encoding and decoding. UTF-32 avoids this problem: bytes will always be in natural endianness. When these bytes are read by a CPU with a different endianness, then bytes have to be swapped though. To be able to detect the endianness of a UTF-16 or UTF-32 byte sequence, there's the so called BOM (“Byte Order Mark”). 
+  </blockquote>
+  The above is the origin of BOM.
+  <blockquote>
+  This is the Unicode character U+FEFF. This character can be prepended to every UTF-16 or UTF-32 byte sequence. The byte swapped version of this character (0xFFFE) is an illegal character that may not appear in a Unicode text. 
+  So when the first character in an UTF-16 or UTF-32 byte sequence appears to be a U+FFFE the bytes have to be swapped on decoding. Unfortunately the character U+FEFF had a second purpose as a ZERO WIDTH NO-BREAK SPACE: a character that has no width and doesn't allow a word to be split. It can e.g. be used to give hints to a ligature algorithm. With Unicode 4.0 using U+FEFF as a ZERO WIDTH NO-BREAK SPACE has been deprecated (with U+2060 (WORD JOINER) assuming this role). Nevertheless Unicode software still must be able to handle U+FEFF in both roles: as a BOM it's a device to determine the storage layout of the encoded bytes, and vanishes once the byte sequence has been decoded into a Unicode string; as a ZERO WIDTH NO-BREAK SPACE it's a normal character that will be decoded like any other. 
+  There's another encoding that is able to encoding the full range of Unicode characters: UTF-8. UTF-8 is an 8-bit encoding, which means there are no issues with byte order in UTF-8, since the code unit size is one octet. Each byte in a UTF-8 byte sequence consists of two parts: marker bits (the most significant bits) and payload bits. The marker bits are a sequence of zero to four 1 bits followed by a 0 bit. 
+  </blockquote>
+  <blockquote>
+  UTF-8 is an 8-bit encoding no BOM is required and any U+FEFF character in the decoded Unicode string (even if it's the first character) is treated as a ZERO WIDTH NO-BREAK SPACE.
+  Without external information it's impossible to reliably determine which encoding was used for encoding a Unicode string. Each charmap encoding can decode any random byte sequence. However that's not possible with UTF-8, as UTF-8 byte sequences have a structure that doesn't allow arbitrary byte sequences. To increase the reliability with which a UTF-8 encoding can be detected, Microsoft invented a variant of UTF-8 (that Python 2.5 calls "utf-8-sig") for its Notepad program: Before any of the Unicode characters is written to the file, a UTF-8 encoded BOM (which looks like this as a byte sequence: 0xef, 0xbb, 0xbf) is written. As it's rather improbable that any charmap encoded file starts with these byte values (which would e.g. map to
+  LATIN SMALL LETTER I WITH DIAERESIS
+  RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
+  INVERTED QUESTION MARK
+  in iso-8859-1), this increases the probability that a utf-8-sig encoding can be correctly guessed from the byte sequence. <b><i style="color: orange;">So here the BOM is not used to be able to determine the byte order used for generating the byte sequence, but as a signature that helps in guessing the encoding. </i></b>On encoding the utf-8-sig codec will write 0xef, 0xbb, 0xbf as the first three bytes to the file. On decoding utf-8-sig will skip those three bytes if they appear as the first three bytes in the file. In UTF-8, the use of the BOM is discouraged and should generally be avoided. 
+  </blockquote>
+  So the Excel somhow use utf-8-sig to decode characters involved. Still don't know why, because other csv file saved with utf-8 encoding can be opened with Excel normally.
+  <hr>
+
+  <ol type=1>
+    <li id="note-1">Jeffrey E.F.Friedl, Mastering Regular Expressions,Oreily,1997</li><a href="#1">&#8617;</a>
+    <li id="note-2">Abraham Silberschatz, Henry F. Korth, S. Sudarshan, Database System Concepts 7th, 2020, McGraw-Hill</li><a href="#2">&#8617;</a>    
+  </ol> 
+
+  <script src="/assets/js/prism.js"></script>
+</body>
