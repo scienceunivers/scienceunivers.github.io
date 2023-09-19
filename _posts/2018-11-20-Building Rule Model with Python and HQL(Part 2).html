@@ -213,7 +213,7 @@ where instructor.dept_name = instructor of.dept_name);
   In most industrial application, there's solid needs for queries like joining multiple tables, subqueries, which I think should be payed more attention than built-in functions. Before you work yoursefl through these queries, you'd better figure out the meaning of various joins, like INNER JOIN, CROSS JOIN, STRAIGHT JOIN, LEFT/RIGHT JOIN, NATURAL JOIN. Different way fo join result in different complexity and executing speed, and may influence optimization schema of SQL engine.
   There is a kind of subquery worth pointing out:
   <pre>
-    <code class="languange-sql">
+    <code class="language-sql">
 select course id
 from section as S
 where semester = 'Fall' and year= 2017 and
@@ -266,7 +266,7 @@ from rec_prereq;
   The SQL:1999 standard is to allow multiple SQL statements to be enclosed between the keywords <b>begin atomic … end</b>. All the statements between the keywords then form a single transaction, which is committed by default if execution reaches the <b>end</b> statement. Only some databases, such as SQL Server, support the above syntax. However, several other databases, such as MySQL and PostgreSQL, support a <b>begin</b> statement which starts a transaction containing all subsequent SQL statements, but do not support the <b>end</b> statement; instead, the transaction must be ended by either a <b>commit work</b> or a <b>rollback work</b> command.
   There might be times, when you want to lock other types of tables that are included in your database. By locking nontransactional tables manually, you can group SQL statements together and set up a transaction-like operation in order to prevent anyone from changing the tables that participate in your operation. To lock a nontransactional table, you must use the <code class="language-ql">LOCK TABLES</code> statement. Once you've completed updating the tables, you should use the <code class=language-sql">UNLOCK TABLES</code> statement to release them. 
   <h1><a id="link-to-anchor-4">utf8, BOM, utf8_sig</a></h1>
-  At the end of my script, I transfer DataFrame to csv using:
+  At the end of my rule model script, I transfer DataFrame to csv using:
   <pre>
     <code class="language-python">
 middleTable.to_csv(r'/home/kylin/lizhichang/checkingResults/20181201/after20160824/middleTable.csv',encoding='utf_8',index=False)
