@@ -25,6 +25,14 @@ body{
   min-height: 100vh;
   background: linear-gradient(var(--pink) 0%, var(--violet) 100%);
 }
+.caption{
+  /* display: block;
+  float: right; */
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  right: 0px;
+}
 .wrapper{
   width: 380px;
   padding: 25px 30px;
