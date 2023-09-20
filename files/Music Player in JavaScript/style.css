@@ -30,7 +30,7 @@ body{
   float: right; */
   width: 100px;
   height: 100px;
-  position: absolute;
+  position: fixed;
   right: 0px;
 }
 .wrapper{
