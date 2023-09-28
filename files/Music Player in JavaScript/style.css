@@ -26,13 +26,17 @@ body{
   background: linear-gradient(var(--pink) 0%, var(--violet) 100%);
 }
 .caption{
-  /* display: block;
-  float: right; */
-  width: 100px;
+  /* display: block; */
+  /* float: right;  */
+  width: 320px;
   height: 100px;
-  position: fixed;
-  right: 0px;
-  top: 10%;
+  position: absolute;
+  bottom: 70%;
+  padding: 5%;
+  text-align: center;
+  color: yellow;
+  /* top: 10%; */
+  /* z-index: 10; */
 }
 .wrapper{
   width: 380px;
