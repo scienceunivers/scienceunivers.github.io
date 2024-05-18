@@ -80,16 +80,16 @@ tags:
   来个小例子：
   <pre>
     <code class="language-python">
-      &gt; fig, _ = plt.subplots()
-      &gt; type(fig)
+      &gt;&gt;&gt; fig, _ = plt.subplots()
+      &gt;&gt;&gt; type(fig)
       &lt;class 'matplotlib.figure.Figure'&gt;
     </code>
   </pre>
   我们用 plt.subplots()创建了级Figure对象。通过不断引用对象中的属性，可以很容易地遍历图形层次结构。比如让我们查看第一个Axes的y轴的第一个刻度：
   <pre>
     <code class="language-python">
-      &gt; tick_1 = fig.axes[0].yaxis.get_major_ticks()[0]
-      &gt; type(tick_1)
+      &gt;&gt;&gt;tick_1 = fig.axes[0].yaxis.get_major_ticks()[0]
+      &gt;&gt;&gt;type(tick_1)
       &lt;class 'matplotlib.axis.YTick'&gt;
     </code>
   </pre>
@@ -142,5 +142,7 @@ tags:
   </pre>
   然后定义一个画minor tick的函数，如果x坐标被1除后余数是0则返回空，否则将以2位浮点数显示。然后设主刻度、副刻度的locator，即位置属性。然后设置xy轴上下限。然后设定刻度的属性，比如宽度、长度、标签大小颜色等。
 
+  <script src="/assets/js/prism.js"></script>
+</body>
 
 
