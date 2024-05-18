@@ -48,15 +48,15 @@ tags:
 
   <h1><a id="link-to-anchor-1">preface</a></h1>
   一图胜千言，但出一张图不容易。觉得画图难，这时你需要Pythonmatplotlib来拯救你。用这个包，创建一个企业级质量图形，所需的时间远少于远少于其他软件，python图形生态圈提供的功能也远非其他软件可比拟。学习matplotlib没啥秘诀，就是多练，反复练，让自己画的图看起来恰到好处通常是通过反复试验来实现的。当然这是一个庞大的库，完全掌握谈何容易。我这个matplotlib系列的文章属于入门或初中级教程，尽量把理论与示例结合。通过示例，让大家对这个包的认知更加intuitive，也对matplotlib内部运作机理有一个初步了解。
-  <br>
+  <hr>
   Matplotlib对初学者而言，学起来令人稀里糊涂，但也没夸张到让人从入门到放弃的程度。matplotlib的资料浩如烟海，这个库确实很庞大，最关键的是Matplotlib拥有多种不同的接口来构建图形，不同的资料提供的代码可能一会用figrure，一会用plot，让人眼花缭乱，而且网上的文档，过时问题很严重，可能事倍功半，或者兼容性问题。因此，在我们讨论酷炫狂拽的示例之前，先从整体上了解一下matplotlib，是个明智的选择，对入门很有帮助。
-  <br>
+  <hr>
   先学点历史：这个包的创作者John D.Hunter是搞生物的，他于2003年开始开发matplotlib，最初是为了用matplotlib模拟MATLAB的画图。John于2012年不幸去世，而matplotlib现在由其他人开发维护。John在2012年SciPy会议上做了关于matplotlib的演讲，提到他开始开发matplotlib时只有一个孩子，空闲时间还是有的，后来有了三个孩子，再加上各种杂务，分身乏术了。
-  <br>
+  <hr>
   MATLAB的一个特点是全局风格/特性，啥意思呢，就是Python的导入概念在MATLAB中几乎不怎么使用，用户可以轻松使用大多数MATLAB函数。这个稍微有点python基础的读者都应该明白，python，java，c这些常见面向对象语言都会在开头导入一堆包，MATLAB没有这种模式。当然这些语言都有面向对象、过程式的编程范式，现代语言点编程范式不再那么泾渭分明。正因为matplotlib起源于MATLAB，所以我们可以理解为什么matplotlib中有pylab存在。pylab是matplotlib库中的一个模块，意在模仿MATLAB的全局风格/特性，它的存在只是为了将NumPy和matplotlib中的函数和类纳入命名空间，以便不习惯import的MATLAB用户轻松过渡。当然我觉得这个有些脱裤子放屁，import模式真的谈不上有多麻烦，无非就是在脚本顶端加几行代码，不值得大动干戈专门搞一个pylab来规避这件事情。
-  <br>
+  <hr>
   因为即便有了pylab所贡献的全局风格，但你也一样得使用<code class="language=python">from pylab import *</code>。在代码开头加一行这个，这样才可以像在 MATLAB中一样直接调用plot()。唉，归根结底还是少不了import，毕竟你是在python环境中使用matplotlib，所以专门搞pylab意义何在呢？而且对于某些Python用户来说，这里的问题很明显：使用import * 通常是不好的做法，容易产生命名空间中的引用混乱，污染命名空间，并导致难以跟踪、排查的错误。所以我一般建议在ipython或者jupyter中直接<code class="language=python">%matplotlib</code>。
-  <br>
+  <hr>
   好在matplotlib 已经放弃了pylab，现在matplotlib明确建议不要使用pylab，从而使事情更符合one of the zens of Python：explicit is better than implicit。
   不用pylab的情况下，我们采用规范的导入方式：
   <pre>
@@ -70,26 +70,26 @@ tags:
   <h1><a id="link-to-anchor-2">matplotlib的对象层次</a></h1>
   使用matplotlib之前，搞清楚它的对象层次结构，会对后续学习使用非常有帮助。这会帮你在大脑中构造一个系统框架，后面有什么新增知识，顺着这个框架去填充就好了。
   如果你自己试着跑过一两行matplotlib示例代码，你可能调用过类似 plt.plot([1, 2, 3]) 的语句。每次这种类似的调用，都暗含了一个事实：画出来的图，实际上是嵌套着Python对象的层次结构。意思是每个图都有一个matplotlib对象的树状结构，一层一层延展下去。
-  <br>
+  <hr>
   比如Figure是matplotlib图形的最外层容器，它包含多个Axes对象。这里注意，你不要将axes理解为轴、数轴的复数形式。axes在matplotlib语境中的意思是图。也许你会问，figure不也是图么？没错，但在这里，可以将figure理解为画布，axes是画布上的坐标系构造出来的图平面，跟axis是不同的对象。这是一个比较容易造成概念混乱的点，尤其对于初学者。你可以将Figure视为一个盒子/画板/画布，其中包含一个或多个轴（实际上是轴构成的绘图区域）。在这个层次结构中，axes下面，是其他对象，例如刻度线、行、图例和文本框。每个“元素”都是可操作的Python对象。
-  <br>
+  <hr>
   <p align="center">
     <img src="/assets/images/202405181700matplotlib对象层次.png" />
   </p>
   来个小例子：
   <pre>
     <code class="language-python">
-      >>> fig, _ = plt.subplots()
-      >>> type(fig)
-      <class 'matplotlib.figure.Figure'>
+      &gt; fig, _ = plt.subplots()
+      &gt; type(fig)
+      &lt;class 'matplotlib.figure.Figure'&gt;
     </code>
   </pre>
   我们用 plt.subplots()创建了级Figure对象。通过不断引用对象中的属性，可以很容易地遍历图形层次结构。比如让我们查看第一个Axes的y轴的第一个刻度：
   <pre>
     <code class="language-python">
-      >>> tick_1 = fig.axes[0].yaxis.get_major_ticks()[0]
-      >>> type(tick_1)
-      <class 'matplotlib.axis.YTick'>
+      &gt; tick_1 = fig.axes[0].yaxis.get_major_ticks()[0]
+      &gt; type(tick_1)
+      &lt;class 'matplotlib.axis.YTick'&gt;
     </code>
   </pre>
   Matplotlib官网将这种层次结构，呈现为解剖图，而不是树状层次结构，可以去官网查阅，我这里将图一并给出：
