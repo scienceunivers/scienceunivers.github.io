@@ -2,14 +2,14 @@
 main:
   # - title: "Quick-Start Guide"
     # url: https://mmistakes.github.io/minimal-mistakes/docs/quick-start-guide/
-  - title: "Publications"
-    url: /publications/
-  - title: "Projects"
-    url: /projects/
+  - title: "about"
+    url: /about/
   - title: "Library&Readings"
     url: /library&readings/
-  - title: "听首歌"
-    url: /听首歌/
+  - title: "点歌台"
+    url: /点歌台/
+  - title: "播放器"
+    url: /播放器/
   # - title: "Sample Posts"
   #   url: /year-archive/
   # - title: "Sample Collections"

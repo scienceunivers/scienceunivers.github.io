@@ -1,5 +1,6 @@
 ---
 # permalink: /projects/
+# 放到about里面
 ---
 <!--- 2012.7-2013.9, Financing plan design, aiming to raise enough money for a milk company from establishing to operating, with a leverage ratio more than 1:10. The plan begins with registering a limited corporation in tax heaven, set up a bet-on agreement between company owner and privately offered funds, which is completed by private placement. Another part of funds is raised by mortgage of future revenue of products, leveraged lease on production line, convertible bonds, syndicated loan, etc. The plan also take currency arrangement into consideration to take advantage of currency volatility. Waaaaay simpler than real financing plan.
 -->
