@@ -252,7 +252,7 @@ plt.show()
   <hr>
   <h1><a id="link-to-anchor-3">“状态”模式和面向对象模式</a></h1>
 
-  下面我们将讨论有无状态，或者通俗点讲，带不带状态。这个术语，如果你接触过高级宏观经济学里的经济增长模型，可能听过卡尔曼滤波，马尔科夫链，或者有限状态机，这里的状态，就是有限状态机意义中所指的状态。或者，计算机网络这门课，如果你学过，那对这个概念肯定不陌生。状态这个话题，在深入了解matplotlib之前，需要稍微讨论一下，有助于接下来学习。在这之前，<a id="link-to-anchor-2">matplotlib的对象层次</a>，我们使用了<code class="language-python">matplotlib.pyplot as plt</code>，pyplot中的几乎所有函数都隐式地引用当前的画布（axes）和当前图形（axes），如果不存在，则重新创建它们。知道这一点，相当基础且重要，否则，如果你用jupyter notebook，把本该在一个cell中运行的画图代码，拆在了两个cell中运行，就会出来两套乱七八糟不完整的图。
+  下面我们将讨论有无状态，或者通俗点讲，带不带状态。这个术语，如果你接触过高级宏观经济学里的经济增长模型，可能听过卡尔曼滤波，马尔科夫链，或者有限状态机，这里的状态，就是有限状态机意义中所指的状态。或者，计算机网络这门课，如果你学过，那对这个概念肯定不陌生。状态这个话题，在深入了解matplotlib之前，需要稍微讨论一下，有助于接下来学习。在这之前，<a href="link-to-anchor-2">matplotlib的对象层次</a>中，我们使用了<code class="language-python">matplotlib.pyplot as plt</code>，pyplot中的几乎所有函数都隐式地引用当前的画布（axes）和当前图形（axes），如果不存在，则重新创建它们。知道这一点，相当基础且重要，否则，如果你用jupyter notebook，把本该在一个cell中运行的画图代码，拆在了两个cell中运行，就会出来两套乱七八糟不完整的图。
   <hr>
   matplotlib官方文档中也提到了：“……simple functions are used to add plot elements (lines, images, text, etc.) to the current axes in the current figure.”MATLAB 用户可能觉得plt.plot() 是一个隐式跟踪当前图形的状态机接口，他们说这话的意思是，带有状态的接口调用 plt.plot() 和其他顶层pyplot函数，调用的时候，只有一张figure或者一个axes平面被这个调用操作，不必显示地去声明我要操作哪个figure或者axes。当然直接修改图中对象就是面向对象的方法。通常通过调用 Axes下面的方法来完成此操作。高屋建瓴地去看这个过程，如下所示：
   <p align="center">
