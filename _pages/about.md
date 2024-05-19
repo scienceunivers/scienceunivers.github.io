@@ -17,10 +17,18 @@ In general, colleges can determine what constitutes a B.A. or a B.S. Some libera
 
 <!--- 2012.7-2013.9, Financing plan design, aiming to raise enough money for a milk company from establishing to operating, with a leverage ratio more than 1:10. The plan begins with registering a limited corporation in tax heaven, set up a bet-on agreement between company owner and privately offered funds, which is completed by private placement. Another part of funds is raised by mortgage of future revenue of products, leveraged lease on production line, convertible bonds, syndicated loan, etc. The plan also take currency arrangement into consideration to take advantage of currency volatility. Waaaaay simpler than real financing plan.
 -->
-- 2014, stock index volatility analysis using GARCH model(Tools: MATLAB).
-- 2016, a simple DSGE model(Tools: MATLAB), stock strategy based on Black-Litterman, GARCH, EGP model(Tools: MATLAB).
-- 2018, developed a risk model for P2P, based on regulatory rules(Tools: python, sql).
-- 2020, developed several scripts, make my work process half automated(Tools: python).
-- 2023, bulldozer saleprice analysis using random forest, hierarchical clustering(Tools: python).
+I have a full time job as an employee in Chinese state-owned entity. I also work as an amateur in data science off my work. Some projects I did:
+- 2014, stock index volatility analysis using GARCH model(MATLAB).
+- 2016, 
+  - constructed a simple DSGE model(MATLAB).
+  - stock strategy based on Black-Litterman, GARCH, EGP model(MATLAB).
+- 2018, build a risk model for P2P, based on regulatory rules(python, sql).
+- 2020, wrote several scripts over 1000 lines, make xlsx, csv file processing and excel formula calculation half automated(python).
+- 2023, 
+  - bulldozer saleprice analysis using random forest, hierarchical clustering(python fastai).
+  - recognition of MNIST dateset using multilayer perceptron and Logistic regression(python fastai).
+  - sentiment analysis of IMDB movie reviews using Naive Bayes and Logistic regression(python fastai).
+- 2024,
+  - reproducing Kaggle Rossmann Grocery Store competition using newral network(python fastai)
 <!---Please refer to [my repositories](https://github.com/scienceunivers).
 -->
