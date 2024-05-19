@@ -1,0 +1,149 @@
+---
+type: posts
+layout: single
+classes: wide
+title: "Matplotlib助你作图一飞冲天（一）"
+lang: zh
+tags:
+- python
+- Matplotlib
+---
+<head>
+  <!--  
+  <style>
+  code {
+  color: white;
+  background-color: black;
+  padding: 0;
+  }
+  pre {
+  color: white;
+  background-color: black;
+  padding: 0px;
+  margin: 0px;
+  }
+  </style>
+  
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  -->
+  <!--上面css和js目的是html中高亮各种语言，高亮效果不好。-->
+  <link href="/assets/css/prism.css" rel="stylesheet" />
+</head>
+
+<body>
+  <nav class="toc" aria-labelledby="toc-label">
+    <h2 id="toc-label">Contents</h2>
+    <ul class="clean-list">
+      <li><a href="#link-to-anchor-1">subplots画子图</a></li>
+      <li><a href="#link-to-anchor-2">画多个子图</a></li>
+      <li><a href="#link-to-anchor-3">“状态”模式和面向对象模式</a></li>
+      <!-- <li><a href="#link-to-anchor-4"></a></li> -->
+
+    </ul>
+  </nav>
+
+  <hr>
+  <h1><a id="link-to-anchor-1">subplots画子图</a></h1>
+
+  OO体系下，创建具有一对轴的图形的方法是用plt.subplots()。这是OO体系下唯一一次使用pyplot来创建图形和轴：<code class="language-python">fig, ax = plt.subplots()</code>。这里我们利用迭代式解压（实在不好翻译iterable unpacking）思想，把plt.subplots() 返回的两个结果中的每一个，分配一个单独的变量。注意，我们在这里没有将参数传递给subplots()，使用的是默认模式subplots(nrows=1, ncols=1)。因此，ax 是单个 AxesSubplot 对象：
+  <pre>
+    <code class="language-python">
+type(ax)
+&lt;class 'matplotlib.axes._subplots.AxesSubplot'&gt;
+    </code>
+  </pre>
+  我们可以调用subplots的方法来绘图，类似于调用 pyplots 函数的方式。让我们用时间序列堆积面积图来举个例子：
+  <pre>
+    <code class="language-python">
+      import matplotlib.pyplot as plt
+      import numpy as np
+
+      rng = np.arange(100)
+      rnd = np.random.randint(0, 10, size=(3, rng.size))
+      yrs = 1950 + rng
+      
+      fig, ax = plt.subplots(figsize=(6, 4))
+      ax.stackplot(yrs, rng + rnd, labels=['西城', '东城', '海淀'])
+      ax.set_title('Residents over time')
+      ax.legend(loc='upper left')
+      ax.set_ylabel('number of residents')
+      ax.set_xlim(xmin=yrs[0], xmax=yrs[-1])
+      fig.tight_layout()
+    </code>
+  </pre>
+  rng是我们创建的序列，rnd是我们创建的三个0到10之间的随机序列，yrs是年份。我们用subplots画图，尺寸是6*4，注意subplots与subplot是截然不同的两个函数，不要弄混。创建三个随机时间序列后，我们定义了一个包含一组轴的图形。我们直接调用 ax 的方法来创建堆积面积图并添加图例、标题和 y 轴标签。在面向对象的方法下，这些都是变量ax即Axes对象的属性。
+  <p align="center">
+    <img src="/assets/images/202405191616画子图stackplot.png" />
+  </p>
+  尴尬的是matplotlib似乎对中文标签的支持不是很好，提示/usr/local/lib/python3.10/dist-packages/IPython/core/events.py:89: UserWarning: Glyph 35199 (\N{CJK UNIFIED IDEOGRAPH-897F}) missing from current font. 不过总体来说还是很好用的。
+  <hr>
+  下面讲怎样画多个图组成图组。
+  <hr>
+  <h1><a id="link-to-anchor-2">画多个子图</a></h1>
+  <pre>
+    <code class="language-python">
+import matplotlib.pyplot as plt
+import numpy as np
+x = np.random.randint(low=1, high=20, size=50)
+y = x+ np.random.randint(3, 8, size=x.size)^2
+data = np.column_stack((x, y))
+fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2,
+                               figsize=(8, 4))
+ax1.scatter(x=x, y=y, marker='o', c='r', edgecolor='b')
+ax1.set_title('Scatter of $x$ and $y$')
+ax1.set_xlabel('$x$')
+ax1.set_ylabel('$y$')
+
+ax2.hist(data, bins=np.arange(data.min(), data.max()),
+         label=('x', 'y'))
+ax2.legend(loc=(0.8, 0.8))
+ax2.set_title('Frequencies of $x$ and $y$')
+# ax2.yaxis.tick_right()
+    </code>
+  </pre>
+  <p align="center">
+    <img src="/assets/images/202405191624多个子图.png" />
+  </p>
+  这个例子中有些有意思的东西：我们创建一个“1x2”图形，所以 plt.subplots(1, 2) 的返回结果是一个图形对象和一个 Axes array。我们分别处理 ax1 和 ax2，这在带有状态的模式下，很难做到，还是用面向对象的方式，直接把对象抓过来，针对对象中的属性进行操作，简单方便。
+  <br><br>
+  代码先生成一批随机数，作为x，然后在x基础上，加上另外一批随机数的平方，构成y。然后用subplots画图，分别引用ax1、ax2对相应的图形进行作图、调整。注意在设置标签、标题的时候，matplotlib是支持latex的。fig.axes含有所有 Axes 对象。官方文档也说了：“ax can be either a single matplotlib.axes.Axes object or an array of Axes objects if more than one subplot was created.”
+  <pre>
+    <code class="language-python">
+fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(7, 7))
+ax1, ax2, ax3, ax4 = ax.flatten()  
+    </code>
+  </pre>
+  如果画了很多子图，嫌一个个解析很繁琐，可以先把所有子图axes传递给一个变量ax，然后再用flatten解析为4个不同的axes，这样方便对4个不同的子图分别做操作。  下面我们用一个公开数据集，进一步说明子图的相关操作。
+  <pre>
+    <code class="language-python">      
+from io import BytesIO
+import tarfile
+from urllib.request import urlopen
+
+url = 'http://www.dcc.fc.up.pt/~ltorgo/Regression/cal_housing.tgz'
+b = BytesIO(urlopen(url).read())
+fpath = 'CaliforniaHousing/cal_housing.data'
+
+with tarfile.open(mode='r', fileobj=b) as archive:
+    housing = np.loadtxt(archive.extractfile(fpath), delimiter=',')
+y = housing[:, -1]
+pop, age = housing[:, [4, 7]].T
+    </code>
+  </pre>
+  y是某区域房产平均价值，pop是人口数量，age是区域房产平均寿命。
+  <br><br>
+  这里提一嘴，BytesIO。一般来讲python可以识别三种文件，text，bytes，raw data。如果文件是这三者其一，python会认为文件是file-like object，即文件对象。文件也被叫做流，streams，存储在流中的东西/数据，叫做buffers of the stream。BytesIO这个模块主要用来处理binary files，StringIO和BytesIO是Python中io模块提供的类，允许我们将字符串和字节分别视为类似文件的对象。当我们想要使用内存中类似文件的对象而不实际写入或读取物理文件时，这非常有用。即我们把房价数据存在内存中使用，把它们当作file like object。
+  <br><br>
+  StringIO就像存在于计算机内存中的虚拟文件，让我们像处理文件一样处理字符串，轻松写入和读取文本，就像常规文件交互一样。
+  <hr>
+  fpath这个变量是cal_housing.tgz中的路径，cal_housing.tgz是个压缩包，是波尔图大学一个老师主页上的数据，房价数据存储在cal_housing.tgz/CaliforniaHousing这个文件夹下。然后我们用tarfile解压这个文件，用loadtxt转化为numpy array。
+  <br><br>
+  稍微说一下这个数据。这是从卡耐基梅隆大学StatLib 获取的数据集。数据使用 1990 年人口普查中加利福尼亚州的所有街区组（block group，A Census Block Group is a geographical unit used by the United States Census Bureau which is between the Census Tract and the Census Block.）的信息。此样本中，一个街区组平均包括 1425.5 个人，居住在从地理上说相对紧凑的区域。选取的地理区域的大小与人口密度成反比。数据作者计算了每个街区块组质心之间的距离（以纬度和经度测量）。我们排除了所有自变量和因变量为零的街区块组。最终数据包含 9 个变量的 20,640 个观测值。因变量是 ln（房屋价值中位数）。
+  <br><br>
+  具体来说，这份数据包含房屋价值中位数、收入中位数、住房年龄中位数、房间总数、卧室总数、人口、家庭、纬度和经度。
+
+  <script src="/assets/js/prism.js"></script>
+</body>

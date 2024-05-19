@@ -3,6 +3,7 @@ type: posts
 layout: single
 classes: wide
 title: "Matplotlib助你作图一飞冲天（一）"
+lang: zh
 tags:
 - python
 - Matplotlib
@@ -36,16 +37,16 @@ tags:
   <nav class="toc" aria-labelledby="toc-label">
     <h2 id="toc-label">Contents</h2>
     <ul class="clean-list">
-      <li><a href="#link-to-anchor-1">preface</a></li>
+      <li><a href="#link-to-anchor-1">前言</a></li>
       <li><a href="#link-to-anchor-2">matplotlib的对象层次</a></li>
-      <!-- <li><a href="#link-to-anchor-3"></a></li> -->
+      <li><a href="#link-to-anchor-3">“状态”模式和面向对象模式</a></li>
       <!-- <li><a href="#link-to-anchor-4"></a></li> -->
 
     </ul>
   </nav>
 
   <hr>
-  <h1><a id="link-to-anchor-1">preface</a></h1>
+  <h1><a id="link-to-anchor-1">前言</a></h1>
   一图胜千言，但出一张图不容易。觉得画图难，这时你需要Pythonmatplotlib来拯救你。用这个包，创建一个企业级质量图形，所需的时间远少于远少于其他软件，python图形生态圈提供的功能也远非其他软件可比拟。学习matplotlib没啥秘诀，就是多练，反复练，让自己画的图看起来恰到好处通常是通过反复试验来实现的。当然这是一个庞大的库，完全掌握谈何容易。我这个matplotlib系列的文章属于入门或初中级教程，尽量把理论与示例结合。通过示例，让大家对这个包的认知更加intuitive，也对matplotlib内部运作机理有一个初步了解。
   <hr>
   Matplotlib对初学者而言，学起来令人稀里糊涂，但也没夸张到让人从入门到放弃的程度。matplotlib的资料浩如烟海，这个库确实很庞大，最关键的是Matplotlib拥有多种不同的接口来构建图形，不同的资料提供的代码可能一会用figrure，一会用plot，让人眼花缭乱，而且网上的文档，过时问题很严重，可能事倍功半，或者兼容性问题。因此，在我们讨论酷炫狂拽的示例之前，先从整体上了解一下matplotlib，是个明智的选择，对入门很有帮助。
@@ -54,7 +55,7 @@ tags:
   <hr>
   MATLAB的一个特点是全局风格/特性，啥意思呢，就是Python的导入概念在MATLAB中几乎不怎么使用，用户可以轻松使用大多数MATLAB函数。这个稍微有点python基础的读者都应该明白，python，java，c这些常见面向对象语言都会在开头导入一堆包，MATLAB没有这种模式。当然这些语言都有面向对象、过程式的编程范式，现代语言点编程范式不再那么泾渭分明。正因为matplotlib起源于MATLAB，所以我们可以理解为什么matplotlib中有pylab存在。pylab是matplotlib库中的一个模块，意在模仿MATLAB的全局风格/特性，它的存在只是为了将NumPy和matplotlib中的函数和类纳入命名空间，以便不习惯import的MATLAB用户轻松过渡。当然我觉得这个有些脱裤子放屁，import模式真的谈不上有多麻烦，无非就是在脚本顶端加几行代码，不值得大动干戈专门搞一个pylab来规避这件事情。
   <hr>
-  因为即便有了pylab所贡献的全局风格，但你也一样得使用<code class="language=python">from pylab import *</code>。在代码开头加一行这个，这样才可以像在 MATLAB中一样直接调用plot()。唉，归根结底还是少不了import，毕竟你是在python环境中使用matplotlib，所以专门搞pylab意义何在呢？而且对于某些Python用户来说，这里的问题很明显：使用import * 通常是不好的做法，容易产生命名空间中的引用混乱，污染命名空间，并导致难以跟踪、排查的错误。所以我一般建议在ipython或者jupyter中直接<code class="language=python">%matplotlib</code>。
+  因为即便有了pylab所贡献的全局风格，但你也一样得使用<code class="language-python">from pylab import *</code>。在代码开头加一行这个，这样才可以像在 MATLAB中一样直接调用plot()。唉，归根结底还是少不了import，毕竟你是在python环境中使用matplotlib，所以专门搞pylab意义何在呢？而且对于某些Python用户来说，这里的问题很明显：使用import * 通常是不好的做法，容易产生命名空间中的引用混乱，污染命名空间，并导致难以跟踪、排查的错误。所以我一般建议在ipython或者jupyter中直接<code class="language-python">%matplotlib</code>。
   <hr>
   好在matplotlib 已经放弃了pylab，现在matplotlib明确建议不要使用pylab，从而使事情更符合one of the zens of Python：explicit is better than implicit。
   不用pylab的情况下，我们采用规范的导入方式：
@@ -141,6 +142,141 @@ tags:
     </code>
   </pre>
   然后定义一个画minor tick的函数，如果x坐标被1除后余数是0则返回空，否则将以2位浮点数显示。然后设主刻度、副刻度的locator，即位置属性。然后设置xy轴上下限。然后设定刻度的属性，比如宽度、长度、标签大小颜色等。
+  <pre>
+    <code class="language-python">
+      ax.grid(linestyle="--", linewidth=0.5, color='.25', zorder=-10)
+
+      ax.plot(X, Y1, c=(0.25, 0.25, 1.00), lw=2, label="Blue signal", zorder=10)
+      ax.plot(X, Y2, c=(1.00, 0.25, 0.25), lw=2, label="Red signal")
+      ax.plot(X, Y3, linewidth=0,
+              marker='o', markerfacecolor='w', markeredgecolor='k')
+      
+      ax.set_title("Anatomy of a figure", fontsize=20, verticalalignment='bottom')
+      ax.set_xlabel("X axis label")
+      ax.set_ylabel("Y axis label")
+      
+      ax.legend()
+    </code>
+  </pre>
+  在此前画出的图上，画出栅格，设置相应属性。然后开始画图，先画线图，再画散点。设置好图的属性，如线宽度、标签、marker类型颜色等。
+  <pre>
+    <code class="language-python">
+      def circle(x, y, radius=0.15):
+      from matplotlib.patches import Circle
+      from matplotlib.patheffects import withStroke
+      circle = Circle((x, y), radius, clip_on=False, zorder=10, linewidth=1,
+                      edgecolor='black', facecolor=(0, 0, 0, .0125),
+                      path_effects=[withStroke(linewidth=5, foreground='w')])
+      ax.add_artist(circle)
+  
+  
+      def text(x, y, text):
+          ax.text(x, y, text, backgroundcolor="white",
+                ha='center', va='top', weight='bold', color='blue')
+    </code>
+  </pre>
+  然后定义了circle函数，调用matplotlib Circle对象，画圈用。用add_artist把画出来的圆圈添加到整个图形中。自定义的text函数用来添加文字说明。
+  <pre>
+    <code class="language-python">
+# Minor tick
+circle(0.50, -0.10)
+text(0.50, -0.32, "Minor tick label")
+# Major tick
+circle(-0.03, 4.00)
+text(0.03, 3.80, "Major tick")
+# Minor tick
+circle(0.00, 3.50)
+text(0.00, 3.30, "Minor tick")
+# Major tick label
+circle(-0.15, 3.00)
+text(-0.15, 2.80, "Major tick label")
+
+# X Label
+circle(1.80, -0.27)
+text(1.80, -0.45, "X axis label")
+# Y Label
+circle(-0.27, 1.80)
+text(-0.27, 1.6, "Y axis label")
+# Title
+circle(1.60, 4.13)
+text(1.60, 3.93, "Title")
+
+# Blue plot
+circle(1.75, 2.80)
+text(1.75, 2.60, "Line\n(line plot)")
+# Red plot
+circle(1.20, 0.60)
+text(1.20, 0.40, "Line\n(line plot)")
+# Scatter plot
+circle(3.20, 1.75)
+text(3.20, 1.55, "Markers\n(scatter plot)")
+
+# Grid
+circle(3.00, 3.00)
+text(3.00, 2.80, "Grid")
+# Legend
+circle(3.70, 3.80)
+text(3.70, 3.60, "Legend")
+# Axes
+circle(0.5, 0.5)
+text(0.5, 0.3, "Axes")
+# Figure
+circle(-0.3, 0.65)
+text(-0.3, 0.45, "Figure")
+
+color = 'blue'
+ax.annotate('Spines', xy=(4.0, 0.35), xycoords='data',
+            xytext=(3.3, 0.5), textcoords='data',
+            weight='bold', color=color,
+            arrowprops=dict(arrowstyle='->',
+                            connectionstyle="arc3",
+                            color=color))
+
+ax.annotate('', xy=(3.15, 0.0), xycoords='data',
+            xytext=(3.45, 0.45), textcoords='data',
+            weight='bold', color=color,
+            arrowprops=dict(arrowstyle='->',
+                            connectionstyle="arc3",
+                            color=color))
+
+ax.text(4.0, -0.4, "Made with http://matplotlib.org",
+        fontsize=10, ha="right", color='.5')
+
+plt.show()
+    </code>
+  </pre>
+  对circle()一顿调用，把各个元素在axes中圈出来，再对text()一顿调用，写上对应元素的名字。最后调用annotate()添加注释，以及右下角网址。注释内容是“spine”和箭头，注意代码里设置了箭头的属性，传递了一个字典。
+  <hr>
+  <h1><a id="link-to-anchor-3">“状态”模式和面向对象模式</a></h1>
+
+  下面我们将讨论有无状态，或者通俗点讲，带不带状态。这个术语，如果你接触过高级宏观经济学里的经济增长模型，可能听过卡尔曼滤波，马尔科夫链，或者有限状态机，这里的状态，就是有限状态机意义中所指的状态。或者，计算机网络这门课，如果你学过，那对这个概念肯定不陌生。状态这个话题，在深入了解matplotlib之前，需要稍微讨论一下，有助于接下来学习。在这之前，<a id="link-to-anchor-2">matplotlib的对象层次</a>，我们使用了<code class="language-python">matplotlib.pyplot as plt</code>，pyplot中的几乎所有函数都隐式地引用当前的画布（axes）和当前图形（axes），如果不存在，则重新创建它们。知道这一点，相当基础且重要，否则，如果你用jupyter notebook，把本该在一个cell中运行的画图代码，拆在了两个cell中运行，就会出来两套乱七八糟不完整的图。
+  <hr>
+  matplotlib官方文档中也提到了：“……simple functions are used to add plot elements (lines, images, text, etc.) to the current axes in the current figure.”MATLAB 用户可能觉得plt.plot() 是一个隐式跟踪当前图形的状态机接口，他们说这话的意思是，带有状态的接口调用 plt.plot() 和其他顶层pyplot函数，调用的时候，只有一张figure或者一个axes平面被这个调用操作，不必显示地去声明我要操作哪个figure或者axes。当然直接修改图中对象就是面向对象的方法。通常通过调用 Axes下面的方法来完成此操作。高屋建瓴地去看这个过程，如下所示：
+  <p align="center">
+    <img src="/assets/images/202405191557matplotlib状态概念.png" />
+  </p>
+  pit.plot()使用带有状态的接口去完成操作，面向对象的方法，直接操作对象。让我们抽丝剥茧地看一下，plt.plot下面都有什么。plt.plot() 可以归结为如下代码：
+  <pre>
+    <code>
+# matplotlib/pyplot.py
+def plot(*args, **kwargs):
+    """简化版plt.plot()."""
+    ax = plt.gca()
+    return ax.plot(*args, **kwargs)
+
+def gca(**kwargs):
+    """获得当前画布的当前图形"""
+    return plt.gcf().gca(**kwargs)
+    </code>
+  </pre>
+  调用plt.plot()是获取当前Figure的当前axes的简便方法，获取后再用plot去画一些东西。这就是“有状态接口隐式跟踪它想要引用的图”的含义。关键在于gca，getcurrentaxes。pyplot的带有状态接口，包含了这么一批函数：这批函数是matplotlib面向对象接口的封装，例如plt.title()；这些桉树，在OO模式下有相应的setter和getter方法，即ax.set_title()和ax.get_title()，即在OO模式下也可以实现与带有状态模式下同样的功能。当然getter和setter在Java中更流行，但这是matplotlibOO方法的一个关键特性。
+  <hr>
+  调用plt.title()实际上是在调用gca().set_title(s,*args,**kwargs)。本质上是在干这件事：gca()获取当前轴，set_title()是一个setter方法，用于设置Axes的标题。这样做的好处是我们不需要使用plt.title()显式指定任何Axes对象。同样地，plt.grid()、plt.legend()和plt.ylabels()等顶层函数的源代码，都遵循相同的结构，使用gca()拿到当前Axes，然后调用当前Axes的某些方法。
+  <hr>
+  带有状态的思想，与面向对象思想，殊途同归，目的都是画图，前者适用于我们的注意力集中在当前图的情况下，不用指定我们在画哪张图，所有操作默认指向当前图。面向对象思想，会清晰地指定我接下来要操作哪个图哪个对象，更加清楚明白，适用于同时画多张图或者对代码清晰性有明确规定的情形。
+  <hr>
+  好了，状态理论讲得差不多了。现在，我们准备进行绘图。我们主要依赖无状态（面向对象）方法，这种方法更具可定制性，并且随着图形变得更加复杂而派上用场。唉，好像前面讲的那一通状态概念，又没啥用了。没关系，你就当听故事吧。下面开始讲画多张图、画子图。
+
 
   <script src="/assets/js/prism.js"></script>
 </body>
