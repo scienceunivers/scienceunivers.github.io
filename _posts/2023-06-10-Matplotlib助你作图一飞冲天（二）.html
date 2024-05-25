@@ -4,8 +4,8 @@ layout: single
 classes: wide
 title: "Matplotlib助你作图一飞冲天（二）"
 lang: 
-- zh
-- en
+- zh-CN
+- en-US
 tags:
 - python
 - Matplotlib
@@ -43,7 +43,7 @@ tags:
     <ul class="clean-list">
       <li><a href="#link-to-anchor-1">subplots画子图</a></li>
       <li><a href="#link-to-anchor-2">画多个子图</a></li>
-      <li><a href="#link-to-anchor-3">“状态”模式和面向对象模式</a></li>
+      <li><a href="#link-to-anchor-3">transform机制绘制酷炫多彩栅格化子图（subplot2grid）</a></li>
       <!-- <li><a href="#link-to-anchor-4"></a></li> -->
 
     </ul>
@@ -86,6 +86,7 @@ type(ax)
   <hr>
   下面讲怎样画多个图组成图组。
   <hr>
+
   <h1><a id="link-to-anchor-2">画多个子图</a></h1>
   <pre>
     <code class="language-python">
@@ -148,7 +149,94 @@ pop, age = housing[:, [4, 7]].T
   稍微说一下这个数据。这是从卡耐基梅隆大学StatLib 获取的数据集。数据使用 1990 年人口普查中加利福尼亚州的所有街区组（block group，A Census Block Group is a geographical unit used by the United States Census Bureau which is between the Census Tract and the Census Block.）的信息。此样本中，一个街区组平均包括 1425.5 个人，居住在从地理上说相对紧凑的区域。选取的地理区域的大小与人口密度成反比。数据作者计算了每个街区块组质心之间的距离（以纬度和经度测量）。我们排除了所有自变量和因变量为零的街区块组。最终数据包含 9 个变量的 20,640 个观测值。因变量是 ln（房屋价值中位数）。
   <br><br>
   具体来说，这份数据包含房屋价值中位数、收入中位数、住房年龄中位数、房间总数、卧室总数、人口、家庭、纬度和经度。
+  <br><br>
 
+  <h1><a id="link-to-anchor-3">transform机制绘制酷炫多彩栅格化子图（subplot2grid）</a></h1>
+  上节我们对数据集的来源、统计手段、字段作了说明，本节要开始真正作图了。
+  <pre>
+    <code class="language-python">      
+def add_titlebox(ax, text):
+  ax.text(.55, .8, text,
+    horizontalalignment='center',
+    transform=ax.transAxes,
+    bbox=dict(facecolor='white', alpha=0.6),
+    fontsize=12.5)
+  return ax
+    </code>
+  </pre>
+  首先定义一个辅助函数。这个函数的目的是画注释，跟一飞冲天（一）这篇文章中matplotlib对象层次图的circle、text辅助函数异曲同工。
+  <br><br>
+  这里面需要注意的一个参数是transform。transform参数，要求传递一个transform对象。何谓transform对象？Matplotlib里面有个转换(transform)机制，这个机制能做任何几何转换，这种几何转换能确定输出图像时，图像上的各个对象的具体位置在哪里，即在画布的哪个位置。
+  <br><br>
+  transform对象族的继承关系/树状关系，详情可以参见官方文档，父节点的值随子节点的值的改变而改变。树状关系图中关于Bbox等概念，我们现在不做过多解释，大家明白transform基本上都是仿射变换即可，即affine transformation，线性变换加平移。如果读者对机器学习或者计量经济学有所了解，应该对仿射变换有似曾相识的感觉，毕竟线性回归因变量估计值就是对参数向量图片进行仿射变换得到。
+  <br><br>
+  matplotlib利用transform，实现不同坐标系之间的坐标变换，比如实现用户数据区、axes图像区、画布区、显示器区域等系统之间的坐标转换。初学者不用管在这些不同的坐标系之间转换的原理，但随着你深入了解matplotlib，想实现自己的绘图自由，探索一下这背后的原理，不亏。你甚至可以创建自己定义的transform对象。
+  <br><br>
+  我们拿其中的两个坐标系来举例，数据的坐标，和图像中的坐标，可以看到图像中的坐标对应的transform对象是ax.transAxes，正是我们定义的辅助函数里的参数值。
+  <br>
+  <table>
+    <tr>
+      <th>Coordinate system</th>
+      <th>Description</th>
+      <th>Transformation object from system to display</th>
+    </tr>
+    <tr>
+      <td>"data"</td>
+      <td>The coordinate system of the data in the Axes.</td>
+      <td>ax.transData</td>
+    </tr>
+    <tr>
+      <td>"axes"</td>
+      <td>The coordinate system of the Axes; (0, 0) is bottom left of the Axes, and (1, 1) is top right of the Axes.</td>
+      <td>ax.transAxes</td>
+    </tr>
+  </table>
+  <br>
+  辅助函数add_titlebox里的transform参数的作用是，让数据中的坐标，以Axes范围为界限，（0，0）指代Axes图像区域的左下角，（1，1）指代其右上角。所以辅助函数中的文字，会被放在Axes坐标系下的（0.55，0.8）的位置。ok，接着往下看代码：
+  <pre>
+    <code class="language-python">      
+gridsize = (3, 2)
+fig = plt.figure(figsize=(12, 8))
+ax1 = plt.subplot2grid(gridsize, (0, 0), colspan=2, rowspan=2)
+ax2 = plt.subplot2grid(gridsize, (2, 0))
+ax3 = plt.subplot2grid(gridsize, (2, 1))
+    </code>
+  </pre>
+  这里我们设定栅格为3*2，搞一个12*8 inches的画布。这里的关键是subplot2grid函数，第一个参数是栅格形状，第二个参数是位置，第三个第四个参数是延展多少。
+  <p align="center">
+    <img src="/assets/images/202405251638画多个子图.png" />
+  </p>
+  大概是这么个样子。下面的代码是真正的画图。
+  <pre>
+    <code class="language-python">      
+ax1.set_title('relationship of 房屋价值、房屋年龄、区域人口',
+fontsize=14)
+sctr = ax1.scatter(x=age, y=pop, c=y, cmap='gist_rainbow')
+plt.colorbar(sctr, ax=ax1, format='$%d')
+ax1.set_yscale('log')
+ax2.hist(age, color='g',bins='auto')
+ax3.hist(pop, color='c',bins='auto', log=True)
+
+add_titlebox(ax2, 'Histogram: home age')
+add_titlebox(ax3, 'Histogram: area population (log scl.)')
+    </code>
+  </pre>
+  画出来是这个样子：
+  <p align="center">
+    <img src="/assets/images/202405251642画多个子图.png" />
+  </p>
+  仍然有些遗憾，matplotlib对中文的支持还有待提高。不过这数据关系让人匪夷所思，房屋年龄是X轴，X越大房屋价值越高，这是啥逻辑？
+  <br><br>
+  先不管数据展现出的奇怪逻辑，我们解释下scatter里的cmap参数，这个参数，这个东西就是负责将y值映射到不同的颜色浓度上，有不同的颜色体系供你选择，想看matplotlib支持多少颜色体系，可以跑一下：
+  <pre>
+    <code class="language-python">      
+from matplotlib import colormaps
+list(colormaps)
+    </code>
+  </pre>
+  colorbar画出的是图右侧的颜色棒。
+  <br><br>
+  好了，酷炫多子图我们已经初窥门径，下一篇将讲解画布的更多内容和关于颜色的东西。
   <script src="/assets/js/prism.js"></script>
 </body>
 
