@@ -1,0 +1,144 @@
+---
+type: posts
+layout: single
+classes: wide
+title: "Matplotlib助你作图一飞冲天（二）"
+lang: 
+- zh-CN
+- en-US
+tags:
+- python
+- Matplotlib
+---
+<html lang="zh">
+<head>
+  
+  <!--  
+  <style>
+  code {
+  color: white;
+  background-color: black;
+  padding: 0;
+  }
+  pre {
+  color: white;
+  background-color: black;
+  padding: 0px;
+  margin: 0px;
+  }
+  </style>
+  
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  -->
+  <!--上面css和js目的是html中高亮各种语言，高亮效果不好。-->
+  <link href="/assets/css/prism.css" rel="stylesheet" />
+</head>
+
+<body>
+  <nav class="toc" aria-labelledby="toc-label">
+    <h2 id="toc-label">Contents</h2>
+    <ul class="clean-list">
+      <li><a href="#link-to-anchor-1">figure的回收和参数一瞥</a></li>
+      <li><a href="#link-to-anchor-2">matshow</a></li>
+      <li><a href="#link-to-anchor-3">transform机制绘制酷炫多彩栅格化子图（subplot2grid）</a></li>
+      <!-- <li><a href="#link-to-anchor-4"></a></li> -->
+
+    </ul>
+  </nav>
+
+  <hr>
+  <h1><a id="link-to-anchor-1">figure的回收和参数一瞥</a></h1>
+  先讲一点figure识别和figure资源回收的事情。每次我们调用plt.subplots()和plt.figure()的时候，matplotlib会创建figure对象，都存在内存里，默认抓取最近创建的figure。我们看一下各个figure对象的id：
+  <pre>
+    <code class="language-python">
+fig1, ax1 = plt.subplots()
+id(fig1)
+4525122330
+id(plt.gcf())  # `fig1` is the current figure.
+4525122330
+fig2, ax2 = plt.subplots()
+id(fig2) == id(plt.gcf())  # The current figure has changed to `fig2`.
+True
+    </code>
+  </pre>
+  很明显，当前figure总是最后创建的那个。我们可以看一下figure在内存中的编号：
+  <pre>
+    <code class="language-python">
+>>> plt.get_fignums()
+[1, 2]
+
+>>> def get_all_figures():
+...    return [plt.figure(i) for i in plt.get_fignums()]
+>>> get_all_figures()
+[&lt;matplotlib.figure.Figure at 0x10dbeaf60&gt;, &lt;matplotlib.figure.Figure at 0x1234cb6d8&gt;]
+    </code>
+  </pre>
+  还可以定义一个取图函数，获取当前内存中figure。注意plt.figure()不只有画出绘图画布的功能，还可以获取某张画布，figure()的第一个参数num，被要求是一个整数，或者字符串，或者Figure对象，上面代码里num是整数，这个参数相当于画布标识符figure identifier，如果这个标识符已经存在，则返回对应的画布，如果不存在则创建新的画布。
+  <br><br>
+  我们还能注意到一个tricky的地方，就是num是以positional argument的方式传递进figure()的，但在figure的定义中，参数是这样写的：
+  <pre>
+    <code class="language-python">
+matplotlib.pyplot.figure(num=None, figsize=None, dpi=None,
+    *, facecolor=None, edgecolor=None, frameon=True, 
+    FigureClass=&lt;class 'matplotlib.figure.Figure'&gt;, 
+    clear=False, **kwargs)
+    </code>
+  </pre>
+  num看起来是个keyword argument，为什么可以以positional arg的方式进行使用呢？提出这个问题，是很好的，说明读者在思考。之所以读者会提出这个问题，是因为脑海里还没有形成这两种参数准确的定义。即认为给了默认值就是关键字参数，不给就是位置参数。其实不是这样的。给了默认值，叫optional arg，不给的话是required arg，即必须有的参数，调用函数时必须给出。
+  <br><br>
+  在python里（特指python 3，或者python3.8以上版本），存在positional only parameter，positional or keyword parameter，keyword only parameter，figure()中的num，figsize，dpi都是位置或关键字参数，因为没有/，如果函数签名（指函数定义中def那行）中有/，则/之前的都是positional only parameter；如果有*，则*之后的都是keyword only parameter，其余的是positional or keyword parameter。
+  <br><br>
+  位置参数、关键字参数并不是非此即彼的关系。后面可以出几篇文章专门谈一谈参数类别、应用情景。
+
+  <h1><a id="link-to-anchor-1">matshow</a></h1>
+  OK！回到matplotlib，之所以讲如何获取当前内存中的画布Figure，是因为你在跑一段画出多个图的代码时，要记得及时关闭用不着的图，以免撑烂内存，记得调用plt.close()。
+  <br><br>
+  画图的时候，Axes这个东西，里面的方法非常丰富，是几乎被用到最多的对象方法，现在挑两个介绍一下，imshow() and matshow()。这两个函数的用处在于能把数值数组转化成图像。因为图像说白了就是像素数组。
+  <pre>
+    <code class="language-python">
+>>> x = np.diag(np.arange(2, 11))[::-1]
+>>> x[np.diag_indices_from(x[::-1])] = np.arange(1, 11)
+>>> x2 = np.arange(x.size).reshape(x.shape)
+    </code>
+  </pre>
+  np.arange(1, 11) 我们构造一个平均分布的数组（数列），np.diag把它作为对角数组的主对角线，然后倒序取出其中每个数列，即把主对角线上的数值挪到副对角线上，diag_indices_from取出主对角线的索引，把np.arange(1, 11)赋值给主对角线。
+  <br><br>
+  所以x是个主副对角线交叉的数组。x.sizex是100，所以x2是个10*10数组。
+  <pre>
+    <code class="language-python">
+sides = ('left', 'right', 'top', 'bottom')
+nolabels = {s: False for s in sides}
+nolabels.update({'label%s' % s: False for s in sides})
+    </code>
+  </pre>
+  用这段代码，把所有数轴和刻度都抹去，不让它们显示在图形里。
+  <pre>
+    <code class="language-python">
+from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
+
+with plt.rc_context(rc={'axes.grid': False}):
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
+    ax1.matshow(x)
+    img2 = ax2.matshow(x2, cmap='gist_rainbow_r')
+    for ax in (ax1, ax2):
+        ax.tick_params(axis='both', which='both', **nolabels)
+    for i, j in zip(*x.nonzero()):
+        ax1.text(j, i, x[i, j], color='white', ha='center', va='center')
+    divider = make_axes_locatable(ax2)
+    cax = divider.append_axes("right", size='5%', pad=0)
+    plt.colorbar(img2, cax=cax, ax=[ax1, ax2])
+    fig.suptitle('Axes.matshow', fontsize=16)
+    </code>
+  </pre>
+  我们把栅格也关掉，画2个图，调用matshow，图1直接画数组x，图2采用彩虹色彩方案，用一个for循环把所有轴和刻度关掉，再用一个for循环把图1的主副对角线都写上对应的数字。make_axes_locatable重新改变图2的数轴位置，代码显示，数轴被放在了图2右侧，然后画个色彩棒，写上标题。
+  <p align="center">
+    <img src="/assets/images/202405261951matshow.png" />
+  </p>
+
+  <script src="/assets/js/prism.js"></script>
+</body>
+
+</html>
