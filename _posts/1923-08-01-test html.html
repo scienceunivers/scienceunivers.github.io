@@ -8,7 +8,7 @@ tags:
 - 性感
 - 穿搭
 title: test html
-gallery:
+gallery1:
   - url: /assets/images/202312310000/202312231743美女_40.jpg
     image_path: /assets/images/202312310000/202312231743美女_40.jpg
     alt: "placeholder image 1"
@@ -29,17 +29,18 @@ gallery:
     image_path: /assets/images/202312310000/202312241958微信图片_42.jpg
     alt: "placeholder image 5"
     title: "Image 2 title caption"
+gallery2:
   - url: /assets/images/202401220000/微信图片_20240122212111.jpg
     image_path: /assets/images/202401220000/微信图片_20240122212111.jpg
-    alt: "placeholder image 6"
+    alt: "placeholder image 1"
     title: "Image 1 title caption"
   - url: /assets/images/202401220000/微信图片_20240122212117.jpg
     image_path: /assets/images/202401220000/微信图片_20240122212117.jpg
-    alt: "placeholder image 7"
+    alt: "placeholder image 2"
     title: "Image 2 title caption"
   - url: /assets/images/202401220000/微信图片_20240122212131.jpg
     image_path: /assets/images/202401220000/微信图片_20240122212131.jpg
-    alt: "placeholder image 8"
+    alt: "placeholder image 3"
     title: "Image 3 title caption"
   - url: /assets/images/202401220000/微信图片_20240122212136.jpg
     image_path: /assets/images/202401220000/微信图片_20240122212136.jpg
@@ -47,10 +48,9 @@ gallery:
     title: "Image 3 title caption"
   - url: /assets/images/202401220000/微信图片_20240122212142.jpg
     image_path: /assets/images/202401220000/微信图片_20240122212142.jpg
-    alt: "placeholder image 5"
+    alt: "placeholder image 4"
     title: "Image 2 title caption"
 ---
-<!-- 两个gallery不行，只显示最后一个。 -->
 
 <!---
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -87,7 +87,8 @@ gallery:
     complain.
   </p>
 
-  {% include gallery caption="This is a sample gallery with **Markdown support**." %}
+  {% include gallery id="gallery1" caption="This is a sample gallery with **Markdown support**." %}
+  {% include gallery id="gallery2" caption="This is a sample gallery with **Markdown support**." %}
 
 
   <!-- <p align="center">
