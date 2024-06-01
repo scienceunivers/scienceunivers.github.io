@@ -43,7 +43,7 @@ tags:
     <ul class="clean-list">
       <li><a href="#link-to-anchor-1">figure的回收和参数一瞥</a></li>
       <li><a href="#link-to-anchor-2">matshow</a></li>
-      <li><a href="#link-to-anchor-3">transform机制绘制酷炫多彩栅格化子图（subplot2grid）</a></li>
+      <li><a href="#link-to-anchor-3">matplotlib与pandas交互</a></li>
       <!-- <li><a href="#link-to-anchor-4"></a></li> -->
 
     </ul>
@@ -93,7 +93,7 @@ matplotlib.pyplot.figure(num=None, figsize=None, dpi=None,
   <br><br>
   位置参数、关键字参数并不是非此即彼的关系。后面可以出几篇文章专门谈一谈参数类别、应用情景。
 
-  <h1><a id="link-to-anchor-1">matshow</a></h1>
+  <h1><a id="link-to-anchor-2">matshow</a></h1>
   OK！回到matplotlib，之所以讲如何获取当前内存中的画布Figure，是因为你在跑一段画出多个图的代码时，要记得及时关闭用不着的图，以免撑烂内存，记得调用plt.close()。
   <br><br>
   画图的时候，Axes这个东西，里面的方法非常丰富，是几乎被用到最多的对象方法，现在挑两个介绍一下，imshow() and matshow()。这两个函数的用处在于能把数值数组转化成图像。因为图像说白了就是像素数组。
@@ -137,6 +137,72 @@ with plt.rc_context(rc={'axes.grid': False}):
   <p align="center">
     <img src="/assets/images/202405261951matshow.png" />
   </p>
+
+  <h1><a id="link-to-anchor-3">matplotlib与pandas交互</a></h1>
+
+  pandas大家都知道吧，不知道的自己google，不再废话。pandas不光数据分析功能牛逼，内置的画图功能也是可以一战的，而且pandas的画图功能基本上就是matplotlib的封装。具体来讲，就是pandas Series中的plot()，是plt.plot()的封装。具体的好处就在于如果DataFrame的index是日期，gcf().autofmt_xdate()会被pandas自动调用，来获取当前画布Figure、自动将x轴设置为日期。我们可以稍微“证明”一下，这种封装或者链式调用的存在。
+  <pre>
+    <code class="language-python">
+>>> import pandas as pd
+>>> s = pd.Series(np.arange(5), index=list('abcde'))
+>>> ax = s.plot()
+
+>>> type(ax)
+&lt;matplotlib.axes._subplots.AxesSubplot at 0x121083eb8&gt;
+
+>>> id(plt.gca()) == id(ax)
+True
+    </code>
+  </pre>
+  上面的这段代码，我们用pandas画了一个非常简单的图，可以看出它是个AxesSubplot，我们用plt.gca()验证一下，果然这张图的id与current axes的id一样！果然pandas自动获取了当前图（这里就不纠结术语是Figure还是Axes了，就说明这么个意思而已）！
+  <br><br>
+  pandas与matplotlib交互的内部机理，我们通过另一个移动平均的例子，来深入了解一下。看下面这段例子：
+  <pre>
+    <code class="language-python">
+import pandas as pd
+import matplotlib.transforms as mtransforms
+url = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS'
+vix = pd.read_csv(url, index_col=0, parse_dates=True, na_values='.',
+                  infer_datetime_format=True).dropna()
+ma = vix.squeeze('columns').rolling('90d').mean()
+state = pd.cut(ma, bins=[-np.inf, 14, 18, 24, np.inf],
+               labels=range(4))
+cmap = plt.get_cmap('RdYlGn_r')
+ma.plot(color='black', linewidth=1.5, marker='', figsize=(8, 4),
+        label='VIX 90d MA')
+ax = plt.gca()  # Get the current Axes that ma.plot() references
+ax.set_xlabel('')
+ax.set_ylabel('90d moving average: CBOE VIX')
+ax.set_title('Volatility Regime State')
+ax.grid(False)
+ax.legend(loc='upper center')
+ax.set_xlim(xmin=ma.index[0], xmax=ma.index[-1])
+trans = mtransforms.blended_transform_factory(ax.transData, ax.transAxes)
+for i, color in enumerate(cmap([0.2, 0.4, 0.6, 0.8])):
+    ax.fill_between(ma.index, 0, 1, where=state==i,
+                    facecolor=color, transform=trans)
+ax.axhline(vix.squeeze('columns').mean(), linestyle='dashed', color='xkcd:dark grey',
+           alpha=0.6, label='Full-period mean', marker='')
+    </code>
+  </pre>
+  fred.stlouisfed，这个网址一看就是圣路易斯联储的网站，恐慌指数是从这里下载的。看read_csv的参数，第一列作为索引列，注意infer_datetime_format推断日期这个参数，在将来的pandas版本中会抛弃掉。还有一点需要注意，尤其是使用pandas2.0以下的朋友们注意，squeeze参数在2.0中去掉了，要改用DataFrame.squeeze()方法，我这里的代码已经做过调整。
+  <br><br>
+  然后用pd.cut()将VIX的值分为4个区间，cut()具体用法参见网络资料。下一行代码把RdYlGn_r这套颜色cmap的值获取过来，然后画图，获取图形，设置标签、栅格、标注等。参数bins，顾名思义，盒子，就是把一样东西分割装到不同盒子里。
+  <br><br>
+  cmap所采取的RdYlGn_r色谱，后面有个r，代表这是RdYlGn色谱的反向色谱。
+  <br><br>
+  注意blended_transform_factory这个函数，意思是对x轴用一种transform模式，对y轴用另一种transform模式。这个有兴趣以后可以开专题研究，这篇文章稍微做了一下科普：<a href="/_posts/2023-06-10-Matplotlib助你作图一飞冲天（二）.html">matplotlib transform机制绘制酷炫多彩栅格化子图（subplot2grid）</a>。
+  <p>
+  然后用enumerate进行枚举，在index之间进行颜色填充。填充的颜色通过cmap([0.2,0.4,0.6,0.8])得到，cmap起到的是映射作用，把整数映射为RGBA颜色值。cmap是个类，其定义中有个方法__call__(X, alpha=None, bytes=False)，这个方法可以让类的实例像一个函数一样调用，记得pytorch中的对象也有类似特性，熟悉神经网络的同学应该有所察觉。cmap([0.2, 0.4, 0.6, 0.8])中的数值，代表取色谱中的20%、40%等等的颜色值，用于涂色。
+  </p>
+  <p>
+  fill_between是个在某区间内涂色的函数，第一个参数是定义涂色区间的横坐标，第二、三个参数定义涂色区间曲线（定义出两个点，两点确定一条直线）。where参数很有意思，它是一个Boolean array，定义哪些区域不被涂色。被涂色区域是x[where]中where为真所定义的区域，即如果这样的顺序：False，True，False，则这三个真值定义的2个区域不会被涂色。具体来看，where=state==i，即相邻横坐标的state为i的区域被涂色。
+  </p>
+  最后我们加一条虚线表示VIX平均值。如图。
+  <p align="center">
+    <img src="/assets/images/202406011815pandas matplotlib交互VIX.png" />
+  </p>
+  当然我这里的问题在于label Full-period mean没有加上去，不知道为什么。
 
   <script src="/assets/js/prism.js"></script>
 </body>
