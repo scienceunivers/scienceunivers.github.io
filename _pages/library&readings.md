@@ -8,6 +8,7 @@ You can go through all the book names in this [个人图书馆索引](/files/lib
 [个人图书馆索引](/files/library content.html)
 
 [个人图书馆索引](/assets/library content.html)
+[test](/files/1999-08-01-test html.html)
 
 In future, I plan to upgrade this library, enrich its features, renovate this poor looking, making it more like a real library. But now we'd better take what we have at this moment.
 
