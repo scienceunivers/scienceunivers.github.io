@@ -8,7 +8,7 @@ You can go through all the book names in this [个人图书馆索引](/assets/li
 In future, I plan to upgrade this library, enrich its features, renovate this poor looking, making it more like a real library. But now we'd better take what we have at this moment.
 
 Materials I'm recently reading: [最近感兴趣的](/files/recent readings.html)
-[test]({% link /_posts/1999-08-01-test html.html %})
+<!-- [test]({% link _posts/1999-08-01-test html.html %})，提示Liquid Exception: Could not find document '/_posts/1999-08-01-test html.html' in tag 'link'. Make sure the document exists and the path is correct. in _pages/library&readings.md -->
 
 <!---https://github.com/scienceunivers/scienceunivers.github.io/blob/master/files/recent%20readings.md-->
 <!---/files/recent readings.md，链接用这个的话，从内部access，中文有乱码。文件最前面加了编码声明不管用，但post就支持汉字。
