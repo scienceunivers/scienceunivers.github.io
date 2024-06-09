@@ -1,0 +1,129 @@
+---
+type: posts
+layout: single
+classes: wide
+title: "Matplotlib助你作图一飞冲天（四）"
+lang: 
+- zh-CN
+- en-US
+tags:
+- python
+- Matplotlib
+---
+<html lang="zh">
+<head>
+  
+  <!--  
+  <style>
+  code {
+  color: white;
+  background-color: black;
+  padding: 0;
+  }
+  pre {
+  color: white;
+  background-color: black;
+  padding: 0px;
+  margin: 0px;
+  }
+  </style>
+  
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  -->
+  <!--上面css和js目的是html中高亮各种语言，高亮效果不好。-->
+  <link href="/assets/css/prism.css" rel="stylesheet" />
+</head>
+
+<body>
+  <nav class="toc" aria-labelledby="toc-label">
+    <h2 id="toc-label">Contents</h2>
+    <ul class="clean-list">
+      <li><a href="#link-to-anchor-1">matplotlib的第三方资源</a></li>
+      <li><a href="#link-to-anchor-2">matplotlib配置</a></li>
+      
+      <!-- <li><a href="#link-to-anchor-4"></a></li> -->
+
+    </ul>
+  </nav>
+
+  <hr>
+  <h1><a id="link-to-anchor-1">matplotlib的第三方资源</a></h1>
+  介绍一点python中关于matplotlib的第三方资源：
+
+  <li>DataCamp’s matplotlib 作弊手册，就一页pdf。</li>
+  <li>PLOS 计算生物杂志: 画好图的10条法则，通俗易懂，可读性很高。</li>
+  <li>几本比较经典的讨论可视化的著作：Python数据分析，Wes McKinney’s 著，第九章，作者是pandas作者。pandas菜谱，Ted Petrou著，第十一章。SciPy讲义matplotlib部分。科研可视化：Python + Matplotlib (2021) ，Nicolas P. Rougier著。掌握matplotlib，Duncan M. McGreggor著。Matplotlib交互式应用，Benjamin Root著。</li>
+  <li>seaborn是基于matplotlib的画图包，提供了比较高级的接口。注意这里的高级是中性词，不是褒义。replot()是seaborn中很好用的展示统计关系的函数。综合来看，seaborn对统计学领域的画图很在行。</li>
+  <li>Datashader是针对大数据的画图包。它是个管道系统。画图中如果有计算负担很重的步骤，其中的python代码会通过numba被编译成机器码，将计算任务利用Dask均匀分布在多个cpu上，或者通过cuda分布在GPU上，这让大量数据在普通硬件上的运算成为可能。示例中，Datashader可以处理3亿个点来画出图像。</li>
+  <li>plotnine以ggplot为基础。熟悉R的同学可能比较亲切。它通过构造数据变量与可视化对象间的映射来画图。这对于自己设计个性化的图像很有好处。</li>
+  <li>Xarray主要着眼于高维数据画图，引入高维数据标签的概念，基于Numpy NdArray。有些功能类似pandas multiIndex功能，但更加专业化，对向量化运算、groupby的支持看起来还不错。</li>
+  <li>animatplot提供了画动图的功能，而且是交互式的，基于matplotlib，这个包还在发展中，欢迎大神去贡献代码。文档还不错，读起来条分缕析，谆谆教导的味道</li>
+  <li>Matplotlib Animators，这个包提供了不少有意思的类，Out of the box类，提供了滑块来控制动画。各个类的继承关系也很清晰。</li>
+  <li>xmovie，可以基于Xarray对象，制作小电影。轻量级小电影。这也是亿个比较年轻的包，欢迎贡献代码。</li>
+  <li>CMasher针对科学作图，提供了相当多的可供选择的colormap，纯粹是用python3写的。这里的colormap有顺序色彩映射，还有一些diverging消散型的色彩映射</li>
+  <li>cmcrameri是基于Fabio Crameri的颜色映射的一套python封装，这套颜色映射主要用于地理科学。</li>
+  <li>cmocean主要用于海洋科学的作图，作者还贴心放上了一篇如何选择颜色映射的文章：Thyng, K. M., Greene, C. A., Hetland, R. D., Zimmerle, H. M., & DiMarco, S. F. (2016). True colors of oceanography. Oceanography, 29(3), 10.</li>
+  <li>mplcyberpunk，提供了赛博朋克风格的图像画法，有些花里胡哨，他所谓的赛博朋克，基本上是在线条上加了一些荧光特征。</li>
+  <li>viscm用来分析颜色映射，创建新的颜色映射。有不少画图的包都使用了viscm。</li>
+  <li>ArviZ是专门用于贝叶斯模型的画图包，用于探索性分析、样本诊断、模型检测等，可以用于后验推断，这个包会先把数据转换为Xarray。</li>
+  <li>Astropy专门用于画天文学的图。brainglobe-heatmap专门用于画脑部热图，大多用于生物学、人类学、神经科学，支持2D、3D图像。cplot用于画复变函数图像，比较小众的包，除了搞数值分析、应用数学的，应该用不到。DNA Features Viewer用于刻画基因特征图，可以画图基因位置、碱基排列。hockey rink用来画冰球场地的图，居然有这种包，比画复变函数的包还要小众，还是外国人会玩。</li>
+  <li>HyperSpy用来处理高维数据，已经形成了自己的生态圈。生态圈中有刻画X射线光谱分析的，有刻画电子干涉实验的，还有分析原子级别分辨率的扫描隧道显微镜图像的。挺牛逼的生态体系，天坑专业必备。</li>
+
+  <h1><a id="link-to-anchor-2">matplotlib配置</a></h1>
+
+  matplotlib提供了2种不同的配置方式，来对图像进行统一配置。一是修改matplotlibrc文件，二是交互方式修改配置参数，可以通过python交互式终端，也可以用py脚本。
+  <br>
+  matplotlibrc文件是个文本文件，里面列明了用户个性化的配置，这些配置会被每个python session使用。如果你用苹果电脑，一般在这个路径下： ~/.matplotlib/matplotlibrc. 有人选择把各种配置文件搞到GitHub上，这个见仁见智了，反正别搞得到处都是，用的时候根本找不清哪个是哪个。
+  <br>
+  第二种方式是交互式改变配置参数。当你用import matplotlib.pyplot as plt的时候，你会获取到rcParams对象，这个东西由一个装满了配置变量的字典构成。matplotlib中所有以rc开头的对象，都是代表了可以与图像进行交互的东西。
+  <pre>
+    <code class="language-python">
+>>> [attr for attr in dir(plt) if attr.startswith('rc')]
+['rc', 'rcParams', 'rcParamsDefault', 'rc_context', 'rcdefaults']
+    </code>
+  </pre>
+  plt.rcdefaults() 可以恢复matplotlib的内部默认设置。默认设置就存储在plt.rcParamsDefault这个变量中。plt.rcdefaults()这个操作会将你所有在matplotlibrc文件中做的个性化设置，恢复成默认状态。
+  <br>
+  plt.rc()用来交互地设置参数。plt.rcParams是个可被改变的类似字典的对象，可以让你直接改变设置。如果你在matplotlibrc文件中对设置做了改变，这些改变会直接反映到plt.rcParams中。
+  <br>
+  我们可以分别用plt.rc() 和 plt.rcParams来实现同一个目的。
+  <pre>
+    <code class="language-python">
+>>> plt.rc('lines', linewidth=2, color='r')  # Syntax 1
+>>> plt.rcParams['lines.linewidth'] = 2  # Syntax 2
+>>> plt.rcParams['lines.color'] = 'r'
+    </code>
+  </pre>
+  第一行与第二三行代码，干的是同一件事情。风格，是一部分设置的集合。查看可用风格：
+  <pre>
+    <code class="language-python">
+>>> plt.style.available
+['seaborn-dark', 'seaborn-darkgrid', 'seaborn-ticks', 'fivethirtyeight',
+  'seaborn-whitegrid', 'classic', '_classic_test', 'fast', 'seaborn-talk',
+  'seaborn-dark-palette', 'seaborn-bright', 'seaborn-pastel', 'grayscale',
+  'seaborn-notebook', 'ggplot', 'seaborn-colorblind', 'seaborn-muted',
+  'seaborn', 'Solarize_Light2', 'seaborn-paper', 'bmh', 'seaborn-white',
+  'dark_background', 'seaborn-poster', 'seaborn-deep']
+    </code>
+  </pre>
+  如果想用某种风格，可以：
+  <pre>
+    <code class="language-python">
+>>> plt.style.use('fivethirtyeight')
+    </code>
+  </pre>
+  matplotlib也会与不同的后端进行交互。后端backend渲染图表的动力，比如anaconda后端是Qt5Agg。一些后端是可以交互的，即当用户对图表做出变动时，后端动态更新图表，让变化实时反映在图表中。
+  <br>
+  交互模式一般是关闭的，你可以用plt.rcParams['interactive']或者plt.isinteractive()来查看交互模式的关闭情况，用plt.ion()和plt.ioff()来打开或者关闭这种模式。
+  <br>
+  在某些代码中，你可能看到过在代码末尾，有个plt.show()，这行代码的主要目的是，当你把交互模式关了的时候，它会让图像显示出来。换句话说，如果交互模式是开了的，你不必plt.show()，图像会自动通过代码的执行蹦出来，当你引用它们的时候，会自动更新至最新状态；如果交互模式没开，你需要一行plt.show()来显示图像，需要plt.draw()来更新图像。
+  <br>
+  必须注意，交互模式跟你用什么开发环境没有关系，与你是否激活了代码块间作图 plotting没有关系（比如你用jupyter notebook，与你是否执行了jupyter notebook --matplotlib inline或者%matplotlib没有关系）。
+
+  <script src="/assets/js/prism.js"></script>
+</body>
+
+</html>
