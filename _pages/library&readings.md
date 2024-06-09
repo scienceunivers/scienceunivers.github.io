@@ -5,12 +5,6 @@ This is the entrance page of my personal library. It is not only about books, it
 
 You can go through all the book names in this [个人图书馆索引](/files/library content.html), using ctrl + f to search for a book you're interested in, then if you'd like to get a copy of any book, let me know in person.
 
-[个人图书馆索引](/files/library content.html)
-
-[个人图书馆索引](/assets/library content.html)
-[test1](/files/1999-08-01-test html.html)
-[test2](/files/202406052400test html without front matter.html)
-
 In future, I plan to upgrade this library, enrich its features, renovate this poor looking, making it more like a real library. But now we'd better take what we have at this moment.
 
 Materials I'm recently reading: [最近感兴趣的](/files/recent readings.html)
