@@ -161,18 +161,18 @@
       <li>E:\学习、工作充电、翻阅资料\Python\~$thon books.docx</li>
       <li>E:\学习、工作充电、翻阅资料\Python\~$thon for Data Analysis by Wes Mckenney.docx</li>
       <li>E:\学习、工作充电、翻阅资料\Python\利用Python进行数据分析%28Python+For+Data+Analysis中文版%29.pdf</li>
-      <li><a href="{% link _posts/1999-08-01-test html.html %}">{% link _posts/1999-08-01-test html.html %}</a></li>
-      <br>
-      {% link _posts/1999-08-01-test html.html %}
+      <li>{% link _posts/1999-08-01-test html.html %}</li>
+      <li>pages不处理liquid tag，无论是放在a href中还是直接放在网页text里。</li>
       <li>{{site.url}}{% post_url 1999-08-01-test html.html %}</li>
       <li>{{site.baseurl}}{% post_url 1999-08-01-test html.html %}</li>
-      <li><a href="{% link /_posts/1999-08-01-test html.html %}">{% link /_posts/1999-08-01-test html.html %}</a></li>
-      <li><a href="{% link ../_posts/1999-08-01-test html.html %}">{% link ../_posts/1999-08-01-test html.html %}</a></li>
-      <li><a href="{% link ./_posts/1999-08-01-test html.html %}">{% link ./_posts/1999-08-01-test html.html %}</a></li>
-      <li><a href="{% post_url 1999-08-01-test html %}">{% post_url 1999-08-01-test html %}</a></li>
-      <li><a href="/files/1999-08-01-test html.html">/files/1999-08-01-test html.html</a></li>
-      <li><a href="../_posts/1999-08-01-test html.html">../_posts/1999-08-01-test html.html</a></li>
-      <li><a href="../files/1999-08-01-test html.html">../files/1999-08-01-test html.html</a></li>
+      <li>{% link /_posts/1999-08-01-test html.html %}"</li>
+      <li>{% link ../_posts/1999-08-01-test html.html %}</li>
+      <li>{% link ./_posts/1999-08-01-test html.html %}</li>
+      <li>{% post_url 1999-08-01-test html %}</li>
+      <li>/files/1999-08-01-test html.html</li>
+      <li>因为1999-08-01-test html.html含有front matter，放在_posts里才会被处理。_posts文件夹外的带front matter的html不会被jekyll处理，也不会被识别为正常的html。</li>
+      <li>../_posts/1999-08-01-test html.html</li>
+      <li>../files/1999-08-01-test html.html</li>
       <li><a href="../files/Music Player in JavaScript/songs/Ai-Sareru-Hana-Ai-Sarenu-Hana.mp3">../files/Music Player in JavaScript/songs/Ai-Sareru-Hana-Ai-Sarenu-Hana.mp3</a></li>
       <li><a href="https://scienceunivers.github.io/test-html/">https://scienceunivers.github.io/test-html/</a></li>
       <li><a href="/files/202406052400test html without front matter.html">/files/202406052400test html without front matter.html</a></li>
