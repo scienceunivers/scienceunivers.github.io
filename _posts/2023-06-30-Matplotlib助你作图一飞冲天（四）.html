@@ -41,8 +41,9 @@ tags:
   <nav class="toc" aria-labelledby="toc-label">
     <h2 id="toc-label">Contents</h2>
     <ul class="clean-list">
-      <li><a href="#link-to-anchor-1">matplotlib的第三方资源</a></li>
-      <li><a href="#link-to-anchor-2">matplotlib配置</a></li>
+      <li><a href="#link-to-anchor-1">关于可视化、作图visualization偏宏观的第三方资源（持续更新）</a></li>
+      <li><a href="#link-to-anchor-2">关于可视化、作图visualization偏宏观的第三方资源（持续更新）</a></li>
+      <li><a href="#link-to-anchor-3">matplotlib配置</a></li>
       
       <!-- <li><a href="#link-to-anchor-4"></a></li> -->
 
@@ -50,7 +51,7 @@ tags:
   </nav>
 
   <hr>
-  <h1><a id="link-to-anchor-1">matplotlib的第三方资源</a></h1>
+  <h1><a id="link-to-anchor-1">关于可视化、作图visualization偏宏观的第三方资源（持续更新）</a></h1>
   介绍一点python中关于matplotlib的第三方资源：
 
   <li>DataCamp’s matplotlib 作弊手册，就一页pdf。</li>
@@ -58,21 +59,38 @@ tags:
   <li>几本比较经典的讨论可视化的著作：Python数据分析，Wes McKinney’s 著，第九章，作者是pandas作者。pandas菜谱，Ted Petrou著，第十一章。SciPy讲义matplotlib部分。科研可视化：Python + Matplotlib (2021) ，Nicolas P. Rougier著。掌握matplotlib，Duncan M. McGreggor著。Matplotlib交互式应用，Benjamin Root著。</li>
   <li>seaborn是基于matplotlib的画图包，提供了比较高级的接口。注意这里的高级是中性词，不是褒义。replot()是seaborn中很好用的展示统计关系的函数。综合来看，seaborn对统计学领域的画图很在行。</li>
   <li>Datashader是针对大数据的画图包。它是个管道系统。画图中如果有计算负担很重的步骤，其中的python代码会通过numba被编译成机器码，将计算任务利用Dask均匀分布在多个cpu上，或者通过cuda分布在GPU上，这让大量数据在普通硬件上的运算成为可能。示例中，Datashader可以处理3亿个点来画出图像。</li>
+  <br>
+
+  <h1><a id="link-to-anchor-2">其他领域侧重不同功能的画图包</a></h1>
+
+  再介绍些其他领域、侧重不同功能的画图包：
+  <br>
+  <li>HoloViews注重简化代码，愿景是让画图丝滑简单，让使用者聚焦于他想探索什么，尽量少花时间考虑图怎么画，看了看示例，代码也确实比较紧凑，不像matplotlib要基于Axes不断调用各种方法。这个包画的图非常酷炫，offers you a whole plotting extravaganza. 之所以能做出狂拽酷炫能实时缩放的图，是因为HoloViews依赖bokeh，bokeh是个功能非常强大的作图插件，或者叫辅助工具也行。以前我还在StackOverflow找能让jupyter notebook放缩图像的代码，真是踏破铁鞋无觅处，得来全不费工夫。bokeh还可以发布仪表盘，给公开发布产品数据的场景赋能，诸位PPT苦力可以省下大笔时间不用抠图扣到吐了。bokeh还有流动展示的功能，即将时间序列数据，像展开一幅山水画卷一样从左到右让你浏览数据趋势，无论是金融市场时间序列，还是物理传感器采集的数据都不在话下。bokeh还能把画出来的图像发布到网站上，flask、django写的网站，和基于jekyll的网站都可以，太牛逼了。</li>
+  <li>hvPlot也是个很不错的画图接口，功能与HoloViews类似，是个比较高级的接口，与pandas，GeoPandas，Xarray，dask，HoloViews都可以交互，与HoloViews功能比较相似。</li>
   <li>plotnine以ggplot为基础。熟悉R的同学可能比较亲切。它通过构造数据变量与可视化对象间的映射来画图。这对于自己设计个性化的图像很有好处。</li>
   <li>Xarray主要着眼于高维数据画图，引入高维数据标签的概念，基于Numpy NdArray。有些功能类似pandas multiIndex功能，但更加专业化，对向量化运算、groupby的支持看起来还不错。</li>
   <li>animatplot提供了画动图的功能，而且是交互式的，基于matplotlib，这个包还在发展中，欢迎大神去贡献代码。文档还不错，读起来条分缕析，谆谆教导的味道</li>
   <li>Matplotlib Animators，这个包提供了不少有意思的类，Out of the box类，提供了滑块来控制动画。各个类的继承关系也很清晰。</li>
   <li>xmovie，可以基于Xarray对象，制作小电影。轻量级小电影。这也是亿个比较年轻的包，欢迎贡献代码。</li>
-  <li>CMasher针对科学作图，提供了相当多的可供选择的colormap，纯粹是用python3写的。这里的colormap有顺序色彩映射，还有一些diverging消散型的色彩映射</li>
+  <li>CMasher针对科学作图，提供了相当多的可供选择的colormap，这个包纯粹是用python3写的。这里的colormap有顺序色彩映射，还有一些diverging消散型的色彩映射</li>
   <li>cmcrameri是基于Fabio Crameri的颜色映射的一套python封装，这套颜色映射主要用于地理科学。</li>
   <li>cmocean主要用于海洋科学的作图，作者还贴心放上了一篇如何选择颜色映射的文章：Thyng, K. M., Greene, C. A., Hetland, R. D., Zimmerle, H. M., & DiMarco, S. F. (2016). True colors of oceanography. Oceanography, 29(3), 10.</li>
   <li>mplcyberpunk，提供了赛博朋克风格的图像画法，有些花里胡哨，他所谓的赛博朋克，基本上是在线条上加了一些荧光特征。</li>
   <li>viscm用来分析颜色映射，创建新的颜色映射。有不少画图的包都使用了viscm。</li>
   <li>ArviZ是专门用于贝叶斯模型的画图包，用于探索性分析、样本诊断、模型检测等，可以用于后验推断，这个包会先把数据转换为Xarray。</li>
-  <li>Astropy专门用于画天文学的图。brainglobe-heatmap专门用于画脑部热图，大多用于生物学、人类学、神经科学，支持2D、3D图像。cplot用于画复变函数图像，比较小众的包，除了搞数值分析、应用数学的，应该用不到。DNA Features Viewer用于刻画基因特征图，可以画图基因位置、碱基排列。hockey rink用来画冰球场地的图，居然有这种包，比画复变函数的包还要小众，还是外国人会玩。</li>
+  <li>Astropy专门用于画天文学的图。</li>
+  <li>BG Heatmaps专门用于画脑部热图，大多用于生物学、人类学、神经科学，支持2D、3D图像。</li>
+  <li>cplot用于画复变函数图像，比较小众的包，除了搞数值分析、应用数学的，应该用不到。</li>
+  <li>datamapplot是用来画数据地图的，数据地图，在计算机领域的定义是In its simplest form, data mapping helps a company’s databases talk to each other. In practice, data professionals link attributes and values together between data sources. 基本上是数据映射的意思，表明各数据源之间字段的联系，与这个包的示例展示的data map完全不是一个东西，这个包的示例展示的更像是一种聚类。</li>
+  <li>DNA Features Viewer用于刻画基因特征图，可以画图基因位置、碱基排列。</li>
+  <li>hockey rink用来画冰球场地的图，居然有这种包，比画复变函数的包还要小众，还是外国人会玩。</li>
   <li>HyperSpy用来处理高维数据，已经形成了自己的生态圈。生态圈中有刻画X射线光谱分析的，有刻画电子干涉实验的，还有分析原子级别分辨率的扫描隧道显微镜图像的。挺牛逼的生态体系，天坑专业必备。</li>
+  <li>librosa用于音像分析，可以提取音乐特征，跟踪鼓点节奏，节拍分割，处理多通道，分解频谱等。</li>
+  <li>MetPy气象学数据分析可视化工具，可以处理风速、降水点、温度湿度，画Skew-T plot，衡量气流走向的Miller Composite Chart等。</li>
 
-  <h1><a id="link-to-anchor-2">matplotlib配置</a></h1>
+  <!-- https://matplotlib.org/mpl-third-party/ -->
+
+  <h1><a id="link-to-anchor-3">matplotlib配置</a></h1>
 
   matplotlib提供了2种不同的配置方式，来对图像进行统一配置。一是修改matplotlibrc文件，二是交互方式修改配置参数，可以通过python交互式终端，也可以用py脚本。
   <br>
@@ -81,7 +99,7 @@ tags:
   第二种方式是交互式改变配置参数。当你用import matplotlib.pyplot as plt的时候，你会获取到rcParams对象，这个东西由一个装满了配置变量的字典构成。matplotlib中所有以rc开头的对象，都是代表了可以与图像进行交互的东西。
   <pre>
     <code class="language-python">
->>> [attr for attr in dir(plt) if attr.startswith('rc')]
+[attr for attr in dir(plt) if attr.startswith('rc')]
 ['rc', 'rcParams', 'rcParamsDefault', 'rc_context', 'rcdefaults']
     </code>
   </pre>
@@ -92,15 +110,15 @@ tags:
   我们可以分别用plt.rc() 和 plt.rcParams来实现同一个目的。
   <pre>
     <code class="language-python">
->>> plt.rc('lines', linewidth=2, color='r')  # Syntax 1
->>> plt.rcParams['lines.linewidth'] = 2  # Syntax 2
->>> plt.rcParams['lines.color'] = 'r'
+plt.rc('lines', linewidth=2, color='r')  # Syntax 1
+plt.rcParams['lines.linewidth'] = 2  # Syntax 2
+plt.rcParams['lines.color'] = 'r'
     </code>
   </pre>
   第一行与第二三行代码，干的是同一件事情。风格，是一部分设置的集合。查看可用风格：
   <pre>
     <code class="language-python">
->>> plt.style.available
+plt.style.available
 ['seaborn-dark', 'seaborn-darkgrid', 'seaborn-ticks', 'fivethirtyeight',
   'seaborn-whitegrid', 'classic', '_classic_test', 'fast', 'seaborn-talk',
   'seaborn-dark-palette', 'seaborn-bright', 'seaborn-pastel', 'grayscale',
@@ -112,7 +130,7 @@ tags:
   如果想用某种风格，可以：
   <pre>
     <code class="language-python">
->>> plt.style.use('fivethirtyeight')
+plt.style.use('fivethirtyeight')
     </code>
   </pre>
   matplotlib也会与不同的后端进行交互。后端backend渲染图表的动力，比如anaconda后端是Qt5Agg。一些后端是可以交互的，即当用户对图表做出变动时，后端动态更新图表，让变化实时反映在图表中。
