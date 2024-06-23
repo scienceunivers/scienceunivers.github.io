@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset
       xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+      xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com
+ xmlns:image，xmlns:video是我根据https://spotibo.com/sitemap-guide/自己加的。-->
 
 
 <url>
@@ -159,11 +162,22 @@
 </url>
 <url>
   <loc>https://scienceunivers.github.io/files/202406092100html%20without%20front%20matter.html</loc>
+  <image:image>
+    <image:loc>https://scienceunivers.github.io/assets/images/202403030000/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20240302115411.jpg</image:loc>
+    <image:title>gorgeous woman</image:title>
+    <image:geo_location>Berlin, Germany</image:geo_location>
+    <image:caption>model dressed with white skirt and stocking</image:caption>
+  </image:image>
   <lastmod>2024-06-10T11:30:34+00:00</lastmod>
   <priority>0.81</priority>
 </url>
 <url>
   <loc>https://scienceunivers.github.io/files/202406101700html%20without%20front%20matter.html</loc>
+  <video:video>            
+    <video:title>black stocking and high heels</video:title>
+    <video:description>wonderful legs lying on bed</video:description>    
+    <video:content_loc>https://scienceunivers.github.io/assets/images/202404020000/001p6SJRjx08e0iVInLV0f0f0100doS40k01.mp4</video:content_loc>
+  </video:video>
   <lastmod>2024-06-10T11:30:34+00:00</lastmod>
   <priority>0.81</priority>
 </url>

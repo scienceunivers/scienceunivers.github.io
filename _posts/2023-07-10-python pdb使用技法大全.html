@@ -1,0 +1,400 @@
+---
+type: posts
+layout: single
+classes: wide
+title: "python pdb使用技法大全"
+lang: 
+- zh-CN
+- en-US
+tags:
+- python
+- pdb
+---
+<html lang="zh">
+<head>
+  
+  <!--  
+  <style>
+  code {
+  color: white;
+  background-color: black;
+  padding: 0;
+  }
+  pre {
+  color: white;
+  background-color: black;
+  padding: 0px;
+  margin: 0px;
+  }
+  </style>
+  
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  -->
+  <!--上面css和js目的是html中高亮各种语言，高亮效果不好。-->
+  <link href="/assets/css/prism.css" rel="stylesheet" />
+</head>
+
+<body>
+  <nav class="toc" aria-labelledby="toc-label">
+    <h2 id="toc-label">Contents</h2>
+    <ul class="clean-list">
+      <li><a href="#link-to-anchor-1">python pdb 跟踪代码执行</a></li>
+      <li><a href="#link-to-anchor-2">python pdb 断点设置</a></li>
+      <li><a href="#link-to-anchor-3">python pdb 变量值展示和调用追踪</a></li>
+      
+      <!-- <li><a href="#link-to-anchor-4"></a></li> -->
+
+    </ul>
+  </nav>
+
+  <hr>
+  <h1><a id="link-to-anchor-1">python pdb 跟踪代码执行</a></h1>
+
+  debug真的离不开这个东西。快速定位问题出在哪个该死的变量上，必须通过pdb。对于语言初学者，想快速学习一门语言的新特性，或者想试验一个新想法，pdb是一门利器。总之pdb可以让你在调试过程中大呼开了眼，或者带来一些啊哈时刻，更或者让你出现一副死眉旸眼的表情：原来我犯了如此低级的错误！
+  <pre>
+    <code class="language-python">
+import pdb; pdb.set_trace()
+    </code>
+  </pre>
+  这行代码是一切的开始。把这行代码插入到你想要调试排错的代码前面。当然了，也可以用python内置函数breakpoint()进入debug模式。用breakpoint比pdb更灵活，它允许你使用环境变量PYTHONBREAKPOINT，如果把这个变量的值设为0，则会关闭调试功能。python 3.7及后面的版本，推荐使用breakpoint。
+  <br>
+  下面举个例子，这是example1.py源代码：
+  <pre>
+    <code class="language-python">
+filename = __file__
+import pdb; pdb.set_trace()
+print(f'path = {filename}')
+    </code>
+  </pre>
+
+  如果直接用shell执行这个文件，会得到：
+  <pre>
+    <code class="language-shell">
+      $ ./example1.py 
+      &gt; /code/example1.py(5)&lt;module&gt;()
+      ->&gt; print(f'path = {filename}')
+      (Pdb)
+    </code>
+  </pre>
+
+  执行后，pdb会输出被执行文件所在路径，断点位置，在哪个文件哪一行，所在对象的级别是module还是function，等等信息。这里由于文件中没有函数，所以显示module。随后进入pdb交互模式，这时候如果用p，则表示打印某个对象，比如p filename会打印filename变量的值。
+  <pre>
+    <code class="language-python">
+      import os
+      def get_path(filename):
+          """Return file's path or empty string if no path."""
+          head, tail = os.path.split(filename)
+          import pdb; pdb.set_trace()
+          return head
+      filename = __file__
+      print(f'path = {get_path(filename)}')
+    </code>
+  </pre>
+ 
+  这个文件，我们命名为example2.py，执行它，结果将是
+  <pre>
+    <code class="language-shell">
+      $ ./example2.py 
+      &gt; /Document/example2.py(10)get_path()
+      -&gt; return head
+      (Pdb)
+    </code>
+  </pre>
+ 
+  这次我们定义了函数，set_trace()放在在函数里，所以这次执行，停在了get_path的return行之前。p命令可以被理解为print的pdb版本。pp (pretty-print)命令适用于打印大量结果的时候。如何继续执行下一行呢？有两个命令：n，s。
+  <br>
+  n (next)继续执行。s (step)继续执行。二者区别在于，如果n遇到调用函数，会将被调用函数执行完，回到发起调用的函数；s遇到调用其他函数，会停留在其他函数里。看一个使用n的例子：
+  <pre>
+    <code class="language-python">
+      import os
+      def get_path(filename):
+          """Return file's path or empty string if no path."""
+          head, tail = os.path.split(filename)
+          return head
+      filename = __file__
+      import pdb; pdb.set_trace()
+      filename_path = get_path(filename)
+      print(f'path = {filename_path}')
+    </code>
+  </pre>
+
+  运行这个文件（暂且叫它exmaple3.py），结果是
+  <pre>
+    <code class="language-shell">
+      $ ./example3.py 
+      &gt; /Document/example3.py(14)&lt;module&gt;()
+      -&gt; filename_path = get_path(filename)
+      (Pdb) n
+      &gt; /Document/example3.py(15)&lt;module&gt;()
+      -&gt; print(f'path = {filename_path}')
+      (Pdb)
+    </code>
+  </pre>
+
+  看，在get_path()前执行n，执行完get_path()，回到module中get_path()的下一行。我们执行s试试：
+  <pre>
+    <code class="language-shell">
+      $ ./example3.py 
+      &gt; /Document/example3.py(14)&lt;module&gt;()
+      -&gt; filename_path = get_path(filename)
+      (Pdb) s
+      --Call--
+      &gt; /Document/example3.py(6)get_path()
+      -&gt; def get_path(filename):
+      (Pdb)
+    </code>
+  </pre>
+
+  在get_path()前执行s，结果进入了get_path()的第一行。
+  <br>
+  还有个常见命令ll，列出当前函数的源代码。用我们的example3.py可以试一下，获取get_path()的源代码。如果想要输出得少一点，可以用l命令。
+  <br>
+  b的作用是设置断点，使用方法是：<code>b(reak) [ ([filename:]lineno | function) [, condition] ]</code>，这些参数的意思，依次是在哪个文件里，第几行，哪个函数，哪个条件处设置断点。
+  <br>
+  这里构造例子4文件：
+  <pre>
+    <code class="language-python">
+      import util
+      filename = __file__
+      import pdb; pdb.set_trace()
+      filename_path = util.get_path(filename)
+      print(f'path = {filename_path}')
+    </code>
+  </pre>
+
+  还要构造一个工具文件util.py：
+  <pre>
+    <code class="language-python">
+      def get_path(filename):
+          """Return file's path or empty string if no path."""
+          import os
+          head, tail = os.path.split(filename)
+          return head
+    </code>
+  </pre>
+ 
+  然后再shell里执行代码
+  <pre>
+    <code class="language-shell">
+      $ ./example4.py 
+      &gt; /code/example4.py(7)&lt;module&gt;()
+      -&gt; filename_path = util.get_path(filename)
+      (Pdb) b util:5
+      Breakpoint 1 at /code/util.py:5
+      (Pdb) c
+      &gt; /code/util.py(5)get_path()
+      -&gt; return head
+      (Pdb) p filename, head, tail
+      ('./example4.py', '.', 'example4.py')
+      (Pdb)
+    </code>
+  </pre>
+
+  我们在util.get_path(filename)那里设置了set_trace，所以在这一行停顿，此时我们在util.py的第5行设置断点，c的意思是继续执行，直到遇到断点，遇到断点return head这一行，打印变量值，结果如上所示。
+  <br>
+  在pdb模式下，执行b，可以显示所有断点。可以用disable bpnumber 和 enable bpnumber 命令，开启或关闭断点。删除断点，用cl命令。
+
+  <h1><a id="link-to-anchor-2">python pdb 断点设置</a></h1>
+  上一节我们讲到了断点的设置和使用。下面将从设置条件断点开始进一步讲解断点使用。
+  <br>
+  给断点增加条件，是给代码排错的重要手段。我们的例子中，get_path()收到一个相对路径作为输入变量时会报错，我们可以设置一个当路径为相对路径时，则设置断点的代码，让代码停在断点处。
+  <br>
+  为了方便阅读，这里再次展示上一节example4.py的代码：
+  <pre>
+    <code class="language-python">
+      import util
+      filename = __file__
+      import pdb; pdb.set_trace()
+      filename_path = util.get_path(filename)
+      print(f'path = {filename_path}')
+    </code>
+  </pre>
+
+  这是util.py的代码：
+  <pre>
+    <code class="language-python">
+      def get_path(filename):
+          """Return file's path or empty string if no path."""
+          import os
+          head, tail = os.path.split(filename)
+          return head
+    </code>
+  </pre>
+
+  如果我们在shell中执行example4.py ：
+  <pre>
+    <code class="language-shell">
+      $ ./example4.py 
+      &gt; /code/example4.py(7)&lt;module&gt;()
+      -&gt; filename_path = util.get_path(filename)
+      (Pdb) b util.get_path, not filename.startswith('/')
+      Breakpoint 1 at /code/util.py:1
+      (Pdb) c
+      &gt; /code/util.py(3)get_path()
+      -&gt; import os
+      (Pdb) a
+      filename = './example4.py'
+      (Pdb)
+    </code>
+  </pre>
+
+  这段代码在set_trace()那里进入debug模式，随后我们设置这样的条件断点：当filename是相对路径时，在get_path中埋下断点。由于filename的值在进入get_path()之前我们就获得了，所以执行后就会真的将断点添加在get_path()中。
+  <br>
+  因为这种设置断点的方式，涉及变量范围，即scope问题，所以要考虑好，条件中的变量，在函数执行时，值能否为函数获得或识别，要求你对LEGB规则很熟悉。如果你想在条件里用函数内部变量，且这个变量不是函数参数，则要在设置断点的时候明确在哪行设置。
+  <br>
+  ok, 到现在我们学习了在调试模式下遍历代码的命令，n，c，s，都是什么作用。
+  <br>
+  还有一个命令，unt，意思是until，但它与c的不同，在于unt会到达比断点设置的那行再远一行。这个命令有个lineno，行数参数，没有这个参数，unt作用与n一样，往下执行一行，有这个参数，会执行到比这个行数多一行的那行。
+  <br>
+  这个命令的作用，有些像n和b组合，即设置断点，再next执行一行。
+  <br>
+  举个例子，看example4unit.py的源代码：
+  <pre>
+    <code class="language-python">
+      import os
+      def get_path(fname):
+          """Return file's path or empty string if no path."""
+          import pdb; pdb.set_trace()
+          head, tail = os.path.split(fname)
+          for char in tail:
+              pass  # Check filename char
+          return head
+      filename = __file__
+      filename_path = get_path(filename)
+      print(f'path = {filename_path}')
+    </code>
+  </pre>
+
+  执行结果如下：
+  <pre>
+    <code class="language-shell">
+      $ ./example4unt.py 
+      &gt; /code/example4unt.py(9)get_path()
+      -&gt; head, tail = os.path.split(fname)
+      (Pdb) ll
+        6     def get_path(fname):
+        7         """Return file's path or empty string if no path."""
+        8         import pdb; pdb.set_trace()
+        9  -&gt;     head, tail = os.path.split(fname)
+      10         for char in tail:
+      11             pass  # Check filename char
+      12         return head
+      (Pdb) unt
+      &gt; /code/example4unt.py(10)get_path()
+      -&gt; for char in tail:
+      (Pdb) 
+      &gt; /code/example4unt.py(11)get_path()
+      -&gt; pass  # Check filename char
+      (Pdb) 
+      &gt; /code/example4unt.py(12)get_path()
+      -&gt; return head
+      (Pdb) p char, tail
+      ('y', 'example4unt.py')
+    </code>
+  </pre>
+  这里我们用ll打出set_trace所在函数源代码，执行unt到下一行，回车再次执行unit到第11行，再次回车执行unt到第12行。
+  <br>
+  s，n，c，unt这些命令，遇到return或者循环，如何反应，有兴趣的话可以自行探索。
+
+  <h1><a id="link-to-anchor-3">python pdb 变量值展示和调用来源追踪</a></h1>
+
+  这篇我们开头主要介绍，除了打印变量p pp外，跟打印变量比较类似的功能，display。这个命令，在pdb模式下，主要用来自动展示表达式的值，比如每次停止执行时，如果某个表达式的值发生了变化，会自动展示出来。与它相反的命令是undisplay。
+  <br>
+  来看个例子：
+  <pre>
+    <code class="language-shell">
+      $ ./example4display.py 
+      &gt; /code/example4display.py(9)get_path()
+      -&gt; head, tail = os.path.split(fname)
+      (Pdb) ll
+        6     def get_path(fname):
+        7         """Return file's path or empty string if no path."""
+        8         import pdb; pdb.set_trace()
+        9  -&gt;     head, tail = os.path.split(fname)
+      10         for char in tail:
+      11             pass  # Check filename char
+      12         return head
+      (Pdb) b 11
+      Breakpoint 1 at /code/example4display.py:11
+      (Pdb) c
+      &gt; /code/example4display.py(11)get_path()
+      -&gt; pass  # Check filename char
+      (Pdb) display char
+      display char: 'e'
+      (Pdb) c
+      &gt; /code/example4display.py(11)get_path()
+      -&gt; pass  # Check filename char
+      display char: 'x'  [old: 'e']
+      (Pdb) 
+      &gt; /code/example4display.py(11)get_path()
+      -&gt; pass  # Check filename char
+      display char: 'a'  [old: 'x']
+      (Pdb) 
+      &gt; /code/example4display.py(11)get_path()
+      -&gt; pass  # Check filename char
+      display char: 'm'  [old: 'a']
+    </code>
+  </pre>
+  
+  display每次c命令执行后，都会展示char变量的值，这在追溯变量值的变化时，非常有用。每次执行c，到达11行pass的时候，char的值都是变化的，这里同时也解答了上篇文章作者给读者提出的问题：当c遇到循环时，会如何反应。
+  <br>
+  你也可以多次使用display，建立变量的监控列表。这比p命令用起来要丝滑。
+  <br>
+  下面我们讨论一个有意思的话题，<span style="background-color:rgb(255, 0, 0)">调用来源识别</span>。example5.py代码如下：
+  <pre>
+    <code class="language-python">
+      import fileutil
+      def get_file_info(full_fname):
+          file_path = fileutil.get_path(full_fname)
+          return file_path
+      filename = __file__
+      filename_path = get_file_info(filename)
+      print(f'path = {filename_path}')
+    </code>
+  </pre>
+
+  fileutil.py代码如下：
+  <pre>
+    <code class="language-python">
+      def get_path(fname):
+          """Return file's path or empty string if no path."""
+          import os
+          import pdb; pdb.set_trace()
+          head, tail = os.path.split(fname)
+          return head
+    </code>
+  </pre>
+ 
+  假设现在有很多对象来调用<span style="color:deeppink;">fileutil.py中的get_path()</span>，但调用的时候某个调用者传递了非法参数。如何区分是哪个调用者调用的呢？用w命令打印最近执行的代码踪迹：
+  <pre>
+    <code class="language-shell">
+      $ ./example5.py 
+      &gt; /code/fileutil.py(5)get_path()
+      -&gt; head, tail = os.path.split(fname)
+      (Pdb) w
+        /code/example5.py(12)&lt;module&gt;()
+      -&gt; filename_path = get_file_info(filename)
+        /code/example5.py(7)get_file_info()
+      -&gt; file_path = fileutil.get_path(full_fname)
+      &gt; /code/fileutil.py(5)get_path()
+      -&gt; head, tail = os.path.split(fname)
+      (Pdb)
+    </code>
+  </pre>
+ 
+  <span style="background-color: yellow;">w命令</span>的结果，作者给大家解读一下：最后一行就是set_trace()到达的那行，get_path()内部的<code>head, tail = os.path.split(fname)</code>。谁调用的get_path()呢？从<code>head, tail = os.path.split(fname)</code>往上看一行即可：file_path=fileutil.get_path()这行调用的。在大型项目里，这样查看谁调用的目标函数，会极大地解放你的精力。
+  <br>
+  最后聊一下，什么是代码踪迹（这里可能翻译不是很好），英文是<b><span style="background-color: black;">stack trace</span></b>，或者frame。当函数被调用时，会产生frame这种数据结构，被调用函数返回时，frame会被删除。stack是一系列的、有顺序的frames。在一段代码被执行时，随着被调用函数层级的增加、变化、减少，stack也会增加、变化、最终减少。
+  <br>
+  当被打印出来时，stack就被叫做stack trace，就是调用的函数轨迹。
+  <br>
+  什么是当前框架呢？这个原本叫做current frame，frame上面我们已经讲过，就是函数执行时产生的框架，或者层级，当前框架就是当前被调用的函数所在的层级。如果想改变current frame，可以用up或down命令。
+
+
+  <script src="/assets/js/prism.js"></script>
+</body>
+
+</html>
