@@ -1,0 +1,378 @@
+---
+type: posts
+layout: single
+classes: wide
+title: "python模块和包：最全面介绍（二）"
+lang: 
+- zh-CN
+- en-US
+tags:
+- python
+- module
+- package
+- 模块
+- 包
+---
+<html lang="zh">
+<head>
+  
+  <!--  
+  <style>
+  code {
+  color: white;
+  background-color: black;
+  padding: 0;
+  }
+  pre {
+  color: white;
+  background-color: black;
+  padding: 0px;
+  margin: 0px;
+  }
+  </style>
+  
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  -->
+  <!--上面css和js目的是html中高亮各种语言，高亮效果不好。-->
+  <link href="/assets/css/prism.css" rel="stylesheet" />
+</head>
+
+<body>
+  <nav class="toc" aria-labelledby="toc-label">
+    <h2 id="toc-label">Contents</h2>
+    <ul class="clean-list">
+      <li><a href="#link-to-anchor-1">Python包</a></li>
+      <li><a href="#link-to-anchor-2">包的初始化</a></li>
+      <li><a href="#link-to-anchor-3">import</a></li>
+      <li><a href="#link-to-anchor-4">子包subpackage</a></li>
+
+    </ul>
+  </nav>
+
+
+  <h1><a id="link-to-anchor-1">Python包</a></h1>
+
+  假设你开发了一个大型程序，里面有很多模块。这时候最好用一种方式把它们组织起来，方便后续的开发和维护。包有一个层级结构，这个结构可以帮助我们组织模块、命名模块，就像避免变量名重复一样，这样有助于避免模块名重复。
+  <p>
+  比如：
+  </p>
+  <p>
+  pkg
+    <li>-mod1.py</li>  
+    <li>-mod2.py</li>
+  </p>
+  这样我们表示在package目录下包含两个模块，mod1，mod2。
+  mod1代码为：
+  <pre>
+    <code class="language-python">
+  def foo():
+      print('[mod1] foo()')
+  
+  class Foo:
+      pass
+    </code>
+  </pre>
+  <p>
+    mod2代码为：
+  </p>
+  <pre>
+    <code class="language-python">
+  def bar():
+      print('[mod2] bar()')
+  
+  class Bar:
+      pass
+    </code>
+  </pre>
+  这样我们可以用dot notation分别导入两个模块：
+  <pre>
+    <code class="language-python">
+&gt;&gt;&gt; import pkg.mod1, pkg.mod2
+&gt;&gt;&gt; pkg.mod1.foo()
+[mod1] foo()
+&gt;&gt;&gt; x = pkg.mod2.Bar()
+&gt;&gt;&gt; x
+&lt;pkg.mod2.Bar object at 0x033F7290&gt;
+    </code>
+  </pre>
+  <pre>
+    <code class="language-python">
+>>> from pkg.mod1 import foo
+>>> foo()
+[mod1] foo()
+    </code>
+  </pre>
+  <p>
+    接下来是一个非常重要但极其容易被初学者忽略的问题：从技术上来讲，我们确实可以导入一个包，导入一个package，但这样做没有用处，而且极易导致混淆。
+  </p>
+  <pre>
+    <code class="language-python">
+&gt;&gt;&gt; import pkg
+&gt;&gt;&gt; pkg
+&lt;module 'pkg' (namespace)&gt;
+    </code>
+  </pre>
+  <p>
+    引用模块，或者模块中的对象，我们发现：
+  </p>
+  <pre>
+    <code class="language-python">
+&gt;&gt;&gt; pkg.mod1
+Traceback (most recent call last):
+  File "&lt;pyshell#34&gt;", line 1, in &lt;module&gt;
+    pkg.mod1
+AttributeError: module 'pkg' has no attribute 'mod1'
+&gt;&gt;&gt; pkg.mod1.foo()
+Traceback (most recent call last):
+  File "&lt;pyshell#35&gt;", line 1, in &lt;module&gt;
+    pkg.mod1.foo()
+AttributeError: module 'pkg' has no attribute 'mod1'
+    </code>
+  </pre>
+  <p>
+    尤其是在代码实战中，当你的精力都被具体的问题、具体的代码、具体的算法所占据的时候，很容易忽视这一点。
+  </p>
+  <p>
+    作者在学习机器学习的时候，自己改写fastai包的时候，犯了这样的一个错误，单纯导入一个包，但是没有导入这个包下面的模块，但代码中，他却试图用dot notation去引用被他导入的这个包下面的模块中的某个对象，不出所料，代码报错，显示无法找到这个包下面的模块中的这个对象，当时他排错排了很久。
+  </p>
+
+  <h1><a id="link-to-anchor-2">包的初始化</a></h1>
+
+  <p>
+    如果你在一个package的路径下发现其中有一个文件叫__init__.py，不要觉得奇怪。这个文件中的代码会在这个包或者包下面的模块被导入的时候被执行，这个文件可以用来执行包级别的初始化代码。
+  </p>
+  假设__init__.py中代码如下：
+  <pre>
+    <code class="language-python">
+print(f'Invoking __init__.py for {__name__}')
+A = ['quux', 'corge','John']
+    </code>
+  </pre>
+  <p>
+    我们把这个文件加入到包的路径下:
+  </p>
+  <p>
+    pkg
+    <li>-__init__.py</li>
+    <li>-mod1.py</li>
+    <li>-mod2.py</li>
+  </p>
+  import一下：
+  <pre>
+    <code class="language-python">
+&gt;&gt;&gt; import pkg
+Invoking __init__.py for pkg
+&gt;&gt;&gt; pkg.A
+['quux', 'corge', 'grault']
+    </code>
+  </pre>
+  当这个包被导入的时候，__init__.py中的变量也会被导入，可执行语句也会被执行。__init__.py中的对象，可以在下一级模块的对象定义里被导入：
+  <pre>
+    <code class="language-python">
+  def foo():
+      from pkg import A
+      print('[mod1] foo() &#47; A = ', A)
+  
+  class Foo:
+      pass
+    </code>
+  </pre>
+  <p>
+    这个笔者有点奇怪，居然不用from .pkg import A，不应该用dot表示一下上级文件吗？有兴趣的读者可以试验下哪种方式是对的。
+  </p>
+  <p>
+    __init__.py还可以用来实行在某个包里把某个模块自动导入。这个可以解决我们刚才提到的导入包——仅仅导入包，但却没法把包里面的模块导入这个问题。
+  </p>
+  <p>
+    我们把__init__.py改写为：
+  </p>
+  <pre>
+    <code class="language-python">
+print(f'Invoking __init__.py for &#123;__name__&#125;')
+import pkg.mod1, pkg.mod2
+    </code>
+  </pre>
+  然后再执行导入：
+  <pre>
+    <code class="language-python">
+&gt;&gt;&gt; import pkg
+Invoking __init__.py for pkg
+&gt;&gt;&gt; pkg.mod1.foo()
+[mod1] foo()
+&gt;&gt;&gt; pkg.mod2.bar()
+[mod2] bar()
+    </code>
+  </pre>
+  这样即便我们在导入的时候仅仅添加了包的名字，没有添加模块的名字，这样也能把包里面的某个模块来导入。
+  <p>
+    这里需要提一嘴，以前的Python文档说__init__.py这个文件必须存在于包的目录组织结构中，用来告诉python这在这里我们组建了一个包。__init__.py可以为空文件，也可以包含初始化代码，但这个文件必须存在于包里面。
+  </p>
+  <p>
+    以前的话这是对的，但是在Python3.3中，Implicit Namespace Packages隐式命名空间包这个概念被引入，__init__.py它的存在不再作为一个必需项，变成了一个可选项。
+  </p>
+
+
+  <h1><a id="link-to-anchor-3">把包里的所有东西都导入</a></h1>
+
+
+  <p>
+    我们把包的结构设置为这样:
+  </p>
+  <p>
+    pkg
+    <li>-mod1.py</li>
+    <li>-mod2.py</li>
+    <li>-mod3.py</li>
+    <li>-mod4.py</li>
+  </p>
+  <p>
+  4个模块的代码如下：
+  </p>
+  mod1.py：
+  <pre>
+    <code class="language-python">
+  def foo():
+      print('[mod1] foo()')
+
+  class Foo:
+      pass
+    </code>
+  </pre>
+  mod2.py:
+  <pre>
+    <code class="language-python">
+  def bar():
+      print('[mod2] bar()')
+
+  class Bar:
+      pass
+    </code>
+  </pre>
+  mod3.py:
+  <pre>
+    <code class="language-python">
+  def baz():
+      print('[mod3] baz()')
+  
+  class Baz:
+      pass
+    </code>
+  </pre>
+  mod4.py:
+  <pre>
+    <code class="language-python">
+  def qux():
+      print('[mod4] qux()')
+  
+  class Qux:
+      pass
+    </code>
+  </pre>
+  正如你之前所注意到的，如果你导入一个模块，注意是模块，不是包，用星号导入，将会导入这个模块中所有的对象，以下划线开头的除外。以下是我们的验证：
+  <pre>
+    <code class="language-python">
+&gt;&gt;&gt; dir()
+['__annotations__', '__builtins__', '__doc__', '__loader__', '__name__',
+'__package__', '__spec__']
+
+&gt;&gt;&gt; from pkg.mod3 import &#42;
+
+&gt;&gt;&gt; dir()
+['Baz', '__annotations__', '__builtins__', '__doc__', '__loader__', '__name__',
+'__package__', '__spec__', 'baz']
+&gt;&gt;&gt; baz()
+[mod3] baz()
+&gt;&gt;&gt; Baz
+&lt;class 'pkg.mod3.Baz'&gt;
+    </code>
+  </pre>
+  <p>
+    可以看到我们导入了mod3中所有的对象。如果我们from后面跟的是package import &#42;，则结果为：
+  </p>
+  <pre>
+    <code class="language-python">
+>>> dir()
+['__annotations__', '__builtins__', '__doc__', '__loader__', '__name__',
+'__package__', '__spec__']
+
+>>> from pkg import &#42;
+>>> dir()
+['__annotations__', '__builtins__', '__doc__', '__loader__', '__name__',
+'__package__', '__spec__']      
+    </code>
+  </pre>
+  <p>
+    没啥变化。因为我们本质上告诉Python导入的还是包，所以并没有导入任何东西。如果想让 from package import *起作用，那么我们需要一个关键字__all__，把这个关键词放在__init__.py中。
+  </p>
+  <p>
+    __all__的作用就是在使用from package import *时，导入__all__中所含的对象。当然设置了__all__后，用import pkg能否导入__all__中的对象，大家可以去做实验，笔者觉得理论上可以。
+  </p>
+  <p>
+    __all__也可以被放在module中，来控制导入模块时哪些对象会被导入。
+  </p>
+  <p>
+    总而言之，__all__既可以用在package中，也可以用在module中，用来控制当使用import star的时候，什么东西应该被导入。当__all__没有被定义时，对于package和module来说，from pkg/mod import &#42;的默认行为是不一样的，package将会不导入任何对象，module将会把所有不以下划线开头的对象都导入。
+  </p>
+  
+
+  <h1><a id="link-to-anchor-4">子包subpackage</a></h1>
+
+  <p>
+  包可以包含嵌套的子包，嵌套的层数可以是任何值。比如我们可以组织如下的包的架构：
+  </p>
+  <p>
+  pkg
+  <p>
+    pkg
+    <li>-subpackage1
+      <li>-mod1.py</li>
+      <li>-mod2.py</li>
+    </li>
+    <li>-subpackage2
+      <li>-mod3.py</li>
+      <li>-mod4.py</li>
+    </li>
+  </p>
+  导入的话还是一样的道理，只不过dot notation表示的层级会增加。
+  <pre>
+    <code class="language-python">
+&gt;&gt;&gt; import pkg.sub_pkg1.mod1
+&gt;&gt;&gt; pkg.sub_pkg1.mod1.foo()
+[mod1] foo()
+
+&gt;&gt;&gt; from pkg.sub_pkg1 import mod2
+&gt;&gt;&gt; mod2.bar()
+[mod2] bar()
+    </code>
+  </pre>
+  你也可以应用相对路径的导入，将其他子包的模块中的对象导入到当前子包中。
+  <p>
+  pkg/sub__pkg2/mod3.py代码：
+  </p>
+
+  <pre>
+    <code class="language-python">
+  def baz():
+      print('[mod3] baz()')
+  
+  class Baz:
+      pass
+  
+  from .. import sub_pkg1
+  print(sub_pkg1)
+  
+  from ..sub_pkg1.mod1 import foo
+  foo()
+  
+    </code>
+  </pre>
+
+
+
+  <script src="/assets/js/prism.js"></script>
+</body>
+
+</html>

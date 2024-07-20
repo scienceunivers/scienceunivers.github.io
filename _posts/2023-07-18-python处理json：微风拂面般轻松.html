@@ -1,0 +1,429 @@
+---
+type: posts
+layout: single
+classes: wide
+title: "python处理json：微风拂面般轻松"
+lang: 
+- zh-CN
+- en-US
+tags:
+- python
+- json
+- serialization
+- 序列化
+- encode
+- 编码
+---
+<html lang="zh">
+<head>
+  
+  <!--  
+  <style>
+  code {
+  color: white;
+  background-color: black;
+  padding: 0;
+  }
+  pre {
+  color: white;
+  background-color: black;
+  padding: 0px;
+  margin: 0px;
+  }
+  </style>
+  
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  -->
+  <!--上面css和js目的是html中高亮各种语言，高亮效果不好。-->
+  <link href="/assets/css/prism.css" rel="stylesheet" />
+</head>
+
+<body>
+  <nav class="toc" aria-labelledby="toc-label">
+    <h2 id="toc-label">Contents</h2>
+    <ul class="clean-list">
+      <li><a href="#link-to-anchor-1">python将json序列化</a></li>
+      <li><a href="#link-to-anchor-2">python将json反序列化</a></li>
+      <li><a href="#link-to-anchor-3">自定义类型与json之间的编码与解码</a></li>
+      
+      <!-- <li><a href="#link-to-anchor-4"></a></li> -->
+
+    </ul>
+  </nav>
+
+  <hr>
+  <h1><a id="link-to-anchor-1">python将json序列化</a></h1>
+
+  不得不承认，JSON现今已成为了事实上的数据交换标准。不管你是用API交换数据，还是在数据库存取数据，不知不觉就会转到JSON的路上。
+  <p>
+    JSON全称是JavaScript Object Notation，源自JavaScript，最初是用来处理JavaScript中的字面量。JSON有自己的官网<a href="https://www.json.org/json-en.html">JSON 官网</a>。通过不断演进，JSON身上早已抹去了JavaScript的痕迹，变得不依赖于特定语言，所以这里的讨论，我们可以剥离JavaScript。JSON对人类阅读和计算机阅读都很友好，所以被广泛采用。举个例子，经常用C族语言或与C族语言风格类似的语言的朋友，对JSON的格式应该感觉似是故人来。
+
+  </p>
+
+  <pre>
+    <code class="language-json">
+
+      {
+        "firstName": "Chandler",
+        "lastName": "Bing",
+        "hobbies": ["joking", "tennis", "singing"],
+        "age": 35,
+        "children": [
+            {
+                "firstName": "Nutty",
+                "age": 3
+            },
+            {
+                "firstName": "Ben",
+                "age": 7
+            }
+        ]
+    }
+    </code>
+  </pre>
+  <p>
+    可以看到JSON支持常见的数据类型，数值、字符串等。
+  </p>
+
+  python有处理json的包。所以python先天支持json。这里先介绍一下序列化的概念。对JSON进行编码的过程叫serialization，序列化。因为整个过程是把数据编成顺序排列的字节，以用于网络传输数据，所以这么叫。解码的过程就叫反序列化。跟序列化还有个相近的概念，叫marshaling，这个先不讨论。
+  python中的JSON包用dump方法来把数据写入磁盘。
+  <p>
+  这张表是python中变量类型与JSON变量类型的对应。天生一对。
+  </p>
+  <table>
+    <thead>
+        <tr>
+            <th>python</th>
+            <th>json</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>dict</td>
+            <td>Object</td>
+        </tr>
+        <tr>
+            <td>List, tuple</td>
+            <td>Array</td>
+        </tr>
+        <tr>
+          <td>str</td>
+          <td>string</td>
+        </tr> .
+        <tr>
+          <td> Int, Long, float</td>
+          <td> Number</td>
+        </tr> 
+        <tr>
+          <td> True</td>
+          <td>True</td>
+        </tr>
+        <tr>
+          <td> false</td>
+          <td>false</td>
+        </tr>
+        <tr>
+          <td> none</td>
+          <td>null</td>
+        </tr>
+    </tbody>
+  </table>
+  比如现在有个变量data，如下：
+  <pre>
+    <code class="language-json">
+    data = {
+      "president": {
+          "name": "Zaphod Beeblebrox",
+          "species": "Betelgeusian"
+        }
+    }
+    </code>
+  </pre>
+
+  我们把它用json格式存储下来：
+  <pre>
+    <code class="language-python">
+  import json
+  with open("data_file.json", "w") as write_file:
+      json.dump(data, write_file)
+  
+  json_string = json.dumps(data)
+    </code>
+  </pre>
+  注意dump的参数，一个是文件名，一个是写入方式。也可以把data存储为python string字符串形式，用dumps，注意这里读作dump - s，不是dump的复数形式图片。注意用dumps的时候不需要文件，即不需要file like object，因为不需要写入磁盘，我们只需要把数据留在内存里。除此之外，dumps和dump几乎相同。
+  <p>
+  JSON的展示格式也是可以改变的，有些朋友的写代码风格不太一样，比如习惯更短或更长的缩进、空格等等。python 的json包提供了改变JSON展示风格的选项。比如：
+  </p>
+  <pre>
+    <code class="language-python">
+  json.dumps(data)
+  json.dumps(data, indent=8)
+    </code>
+  </pre>
+ 
+  除了indent，seperator也是其中的一个关键字参数，可以用来改变JSON字符串各个元素之间的分隔符，比如通过传递tuple，把带空格的分隔符换成不带空格的、更紧凑的形式：(", ", ": ")，替换为 (",", ":")。
+
+  <h1><a id="link-to-anchor-2">python将json反序列化</a></h1>
+  
+  虽然python对象类型与JSON对象类型之间有对应关系，但如果你将python对象序列化为json，又将这个json文件解码为python对象，也不一定就必然还原成原始的python对象类型，这有点像把汉语让A翻译成英文，再让B将英文翻译成汉语，最后的汉语与最初的汉语虽然意思一样，但细节多少有些不同。
+
+  <pre>
+    <code class="language-python">
+  &gt;&gt;&gt; original = (8, "Q")
+  &gt;&gt;&gt; encoded = json.dumps(original)
+  &gt;&gt;&gt; decoded = json.loads(encoded)
+  
+  &gt;&gt;&gt; original == decoded
+  False
+  &gt;&gt;&gt; type(original)
+  &lt;class 'tuple'&gt;
+  &gt;&gt;&gt; type(decoded)
+  &lt;class 'list'&gt;
+  &gt;&gt;&gt; original == tuple(decoded)
+  True
+    </code>
+  </pre>
+  <p>
+    就像这样，我们先编码，再解码，得到的decoded与原来的original不是一个类型。看个例子：
+  </p>
+  <pre>
+    <code class="language-python">
+with open("data_file.json", "r") as read_file:
+data = json.load(read_file)
+    </code>
+  </pre>
+  这个很简单，只需留意，反序列化得到的数据类型，可能偶尔与通常的python、json类型对应关系有所出入。再看一个复杂例子。
+  <pre>
+    <code class="language-python">
+import json
+import requests
+response = requests.get("https://jsonplaceholder.typicode.com/todos")
+todos = json.loads(response.text)
+    </code>
+  </pre>
+  这次我们去JSONPlaceholder网站抓取一些测试数据。这个网站专门用于进行数据测试，提供了一些接口和测试数据，json格式的。  如果你对todos这个数据不熟悉，可以先用网页打开看看它的结构，基本上是这样：  
+  <pre>
+    <code class="language-python">
+  [
+  {
+    "userId": 1,
+    "id": 1,
+    "title": "delectus aut autem",
+    "completed": false
+  },
+  {
+    "userId": 1,
+    "id": 2,
+    "title": "quis ut nam facilis et officia qui",
+    "completed": false
+  },
+  {
+    "userId": 1,
+    "id": 3,
+    "title": "fugiat veniam minus",
+    "completed": false
+  },
+  ...
+  ]
+    </code>
+  </pre>
+  <p>
+    这个todos对象，很明显是个list，里面登记了多个用户，用userId表示，每个用户会有不同的任务，任务用id表示，每个任务有完成和没完成两个状态。让我们看看哪个用户完成了最多的任务：
+  </p>
+  <pre>
+    <code class="language-python">
+todos_by_user = {}
+
+for todo in todos:
+    if todo["completed"]:
+        try:
+            # 增加已存在用户已完成的任务数量。
+            todos_by_user[todo["userId"]] += 1
+        except KeyError:
+            # 如果这个用户还没有遇见过，则把他已完成的任务数量设置为1。
+            todos_by_user[todo["userId"]] = 1
+
+top_users = sorted(todos_by_user.items(), 
+                    key=lambda x: x[1], reverse=True)
+max_complete = top_users[0][1]
+users = []
+for user, num_complete in top_users:
+    if num_complete &lt; max_complete:
+        break
+    users.append(str(user))
+
+max_users = " and ".join(users)
+    </code>
+  </pre>
+  <p>
+  首先我们讲解for todo in todos:这个循环，如果某项任务被完成，则在todos_by_user中某用户对应的键下，计数加1，代表完成的任务数加1，当然考虑到这个用户的键可能还没有，如果没有，则触发keyerror，建立这个用户的键。
+  </p>
+  然后对todos_by_user这个字典，摘出(key,value) pair，进行排序，排序依据为(key,value) pair的第二个元素，即value值，即完成任务的个数。sorted，返回list。
+  <p>
+  然后提取第一个tuple中的第二个元素，得到完成任务个数的最大值。随后设计一个循环，找到完成任务数等于最大值的用户。这个例子中，是用户5和10，他们都完成了12个任务。用and把他们拼接起来。
+  </p>
+  然后我们创建一个json文件，这个文件包含了完成任务数量最多的用户，各自完成的任务。
+  <pre>
+    <code class="language-python">
+  def keep(todo):
+      is_complete = todo["completed"]
+      has_max_count = str(todo["userId"]) in users
+      return is_complete and has_max_count
+  
+  with open("filtered_data_file.json", "w") as data_file:
+      filtered_todos = list(filter(keep, todos))
+      json.dump(filtered_todos, data_file, indent=2)
+    </code>
+  </pre>
+  keep函数是一个过滤函数，将已完成的任务，且完成最多任务数的用户筛选出来。is_complete这里可能有读者认为是完全多余的，并不是的。因为这段代码的目的是筛选完成任务数最多的用户，所完成的任务，所以必须设置“已完成”这个条件，不然会把完成任务数最多的用户未完成的任务也筛选出来。
+  <p>
+  filter是Python自带的函数，作用是Construct an iterator from those elements of iterable for which function is true. iterable may be either a sequence, a container which supports iteration, or an iterator. If function is None, the identity function is assumed, that is, all elements of iterable that are false are removed. 即把todos中完成任务最多用户已完成的任务筛选出来，形成list。
+  </p>
+  最后把这个list dump到json文件中。
+
+
+  <h1><a id="link-to-anchor-3">自定义类型与json之间的编码与解码</a></h1>
+
+
+  假设，我们定义了一个类，比如：
+  <pre>
+    <code class="language-python">
+class Eks:
+    def __init__(self, level, ability_scores=None):
+        self.level = level
+        self.ability_scores = {
+            "str": 11, "dex": 12, "con": 10,
+            "int": 16, "wis": 14, "cha": 13
+      } if ability_scores is None else ability_scores
+        self.hp = 10 + self.ability_scores["con"]
+    </code>
+  </pre>
+  <p>
+    当我们试图把Eks这个类序列化的时候，会发生什么呢？
+  </p>
+  <pre>
+    <code class="language-python">
+&gt; elf = Eks(level=4)
+&gt; json.dumps(elf)
+TypeError: Object of type 'Eks' is not JSON serializable
+    </code>
+  </pre>
+
+  结果不太好看，Python认为这个类，不可序列化。看来json包，尽管可以处理Python内置标准类型，但对于自定义类，是无能为力的。这种感觉就像把楔子打入一个圆孔，json包这个方形楔子并不适用这个圆孔。所以我们需要额外的一些工具，看看如何转化成我们已经知道如何处理的情形。
+  <p>
+  思路是：我们需要把自定义类，转化为json可以识别的类型，即内置类型。为了简单起见，我们用python中的complex类型，这个类型用于表示复数，而且默认是不被Python识别的。
+  </p>
+  <pre>
+    <code class="language-python">
+&gt;&gt;&gt; z = 3 + 8j
+&gt;&gt;&gt; type(z)
+&lt;class 'complex'&gt;
+&gt;&gt;&gt; json.dumps(z)
+TypeError: Object of type 'complex' is not JSON serializable
+    </code>
+  </pre>
+  <p>
+  当你处理自定义类型的时候，记住，要问自己这个自定义类型是如何编码又被解码重新创建的，需要哪些基本的python内置类型。这样才可以更好地分解自定义类型，把它们转化成可序列化的类型。对于复数来说，我们只需知道实部和虚部分别是什么，复数对象有img和real属性，可以得到实部、虚部的值。
+  </p>
+  将复杂类型，分解为组成它的基本类型，对于序列化和反序列化来说都非常重要。
+  <P>
+    所以，想要将自定义类型，用json序列化，只需构造一个编码函数，将这个编码函数传递到dump的default参数上。json模块会对任何对象，使用这个函数，将本来不能序列化的对象，序列化。
+  </P>
+  <pre>
+    <code class="language-python">
+  def encode_complex(z):
+      if isinstance(z, complex):
+          return (z.real, z.imag)
+      else:
+          type_name = z.__class__.__name__
+          raise TypeError(f"Object of type '{type_name}' is not JSON serializable")
+    </code>
+  </pre>
+  <p>
+    比如这个函数，我们先判断是否是复数，是则返回由实部和虚部组成的tuple，这个tuple是可以被序列化的。如果传递的是其他类型（不是复数），则报错，不可序列化。
+  </p>
+  <pre>
+    <code class="language-python">
+&gt;&gt;&gt; json.dumps(9 + 5j, default=encode_complex)
+'[9.0, 5.0]'
+&gt;&gt;&gt; json.dumps(eks, default=encode_complex)
+TypeError: Object of type 'eks' is not JSON serializable
+    </code>
+  </pre>
+  传递eks类型进去，报错。当然在encode_complex的代码中，不一定非得return tuple，返回别的Python内置类型也可以，list、string都可以，只要能被json序列化就行。
+  <p>
+  还有种序列化方法，继承JSONEncoder，重写其default方法：
+  </p>
+  <pre>
+    <code class="language-python">
+  class ComplexEncoder(json.JSONEncoder):
+      def default(self, z):
+          if isinstance(z, complex):
+              return (z.real, z.imag)
+          else:
+              return super().default(z)
+    </code>
+  </pre>
+  <p>
+    这样干的好处在于，如果传递了复数以外的类型，报错可以交给父类JSONEncoder处理，不用自己写。对于这种通过继承父类对序列化方法，调用的时候，可以通过dump调用，但这次不是通过传递给parameter参数，而是传递给cls参数，因为这次是构造了新的类，不是function了。
+  </p>
+    具体cls的含义见官方文档：To use a custom JSONEncoder subclass (e.g. one that overrides the default() method to serialize additional types), specify it with the cls kwarg; otherwise JSONEncoder is used.
+  <p>
+    或者先调用新的类，创建一个实例，然后调用这个类的encode方法。encode方法，详见官方文档，在class json.JSONEncoder()下面。
+  </p>
+  解码自定义类型很简单：
+  <pre>
+    <code class="language-shell">
+&gt;&gt;&gt; complex_json = json.dumps(4 + 17j, cls=ComplexEncoder)
+&gt;&gt;&gt; json.loads(complex_json)
+[4.0, 17.0]
+    </code>
+  </pre>
+  <p>
+    但解码出来就是个list，不是复数，这没有完全实现解码的目的，没有转化成复数。还是再次问自己这个问题：<span style="background-color:rgb(255, 0, 0)">重新制造一个复数对象的条件是什么？必要条件很明显是实部和虚部（一个复数必然有实部虚部），那么充分条件是什么（需要有什么条件才能推出这个对象是个复数对象）？</span>
+  </p>
+    我们可以创建这样的json格式：
+  </p>
+  <pre>
+    <code class="language-python">
+    {
+        "__complex__": true,
+        "real": 42,
+        "imag": 36
+    }
+    </code>
+  </pre>
+  我们通过__complex__这个标识，来做判断，判断对象是否是复数。
+  <pre>
+    <code class="language-python">
+def decode_complex(dct):
+    if "__complex__" in dct:
+        return complex(dct["real"], dct["imag"])
+    return dct
+    </code>
+  </pre>
+
+  如果__complex__不在json格式中，就让默认的解码器处理。在使用load方法时，可以把decode_complex传递给object_hook参数，与dump中的default参数异曲同工。
+
+  <pre>
+    <code class="language-python">
+&gt;&gt;&gt; with open("complex_data.json") as complex_data:
+...     data = complex_data.read()
+...     z = json.loads(data, object_hook=decode_complex)
+... 
+&gt;&gt;&gt; type(z)
+&lt;class 'complex'&gt;
+    </code>
+  </pre>
+
+  <p>
+    当然我们也可以继承JSONDecoder类，然后重写里面的object_hook方法，这与编码生成json文件也是异曲同工。
+  </p>
+
+  <script src="/assets/js/prism.js"></script>
+</body>
+
+</html>
