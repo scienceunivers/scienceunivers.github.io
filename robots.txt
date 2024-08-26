@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /googlec2ae789d2751c522.html
+Sitemap: https://scienceunivers.github.io/sitemap all in one 20240721.xml
